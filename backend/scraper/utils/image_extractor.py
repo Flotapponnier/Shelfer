@@ -308,9 +308,9 @@ class ProductImageExtractor:
             raw_main_urls = [img.get('src') or img.get('dataSrc') for img in image_data.get('mainImages', [])]
             raw_thumb_urls = [img.get('src') or img.get('dataSrc') for img in image_data.get('thumbnails', [])]
             raw_all_urls = [img.get('src') or img.get('dataSrc') for img in image_data.get('allProductImages', [])]
-            print(f"[ImageExtractor-RAW] mainImages URLs: {raw_main_urls}")
-            print(f"[ImageExtractor-RAW] thumbnails URLs: {raw_thumb_urls}")
-            print(f"[ImageExtractor-RAW] allProductImages URLs: {raw_all_urls}")
+            logger.debug(f"ImageExtractor-RAW mainImages URLs: {raw_main_urls}")
+            logger.debug(f"ImageExtractor-RAW thumbnails URLs: {raw_thumb_urls}")
+            logger.debug(f"ImageExtractor-RAW allProductImages URLs: {raw_all_urls}")
             
             # Process and deduplicate images
             processed_images = self._process_extracted_images(image_data, product_name)
@@ -319,9 +319,9 @@ class ProductImageExtractor:
             logger.info(f"  Main image URL: {processed_images['images']['urlMainimage']}")
             logger.info(f"  Other images count: {len(processed_images['images']['otherMainImages'])}")
             logger.info(f"  Other image URLs: {processed_images['images']['otherMainImages']}")
-            # Also print to stdout for immediate visibility
-            print(f"[ImageExtractor] Extracted main image: {processed_images['images']['urlMainimage']}")
-            print(f"[ImageExtractor] Extracted other images: {processed_images['images']['otherMainImages']}")
+            # Also log for immediate visibility
+            logger.debug(f"ImageExtractor Extracted main image: {processed_images['images']['urlMainimage']}")
+            logger.debug(f"ImageExtractor Extracted other images: {processed_images['images']['otherMainImages']}")
             
             return processed_images
             
