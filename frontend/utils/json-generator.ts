@@ -2,30 +2,30 @@ import { DiffType, type DiffResult } from "./json-diff"
 import { ValidationState, type FieldValidation } from "../types/validation"
 
 export function generateFinalJson(
-  originalData: any,
-  enrichedData: any,
+  originalData: unknown,
+  enrichedData: unknown,
   diffResult: DiffResult,
   validationStates: FieldValidation,
-): any {
+): unknown {
   return processObject(originalData, enrichedData, diffResult, validationStates, [])
 }
 
 function processObject(
-  originalData: any,
-  enrichedData: any,
+  originalData: unknown,
+  enrichedData: unknown,
   diffResult: DiffResult,
   validationStates: FieldValidation,
   currentPath: string[],
-): any {
+): unknown {
   if (enrichedData === null || enrichedData === undefined) {
-    return enrichedData
+    return enrichedData;
   }
 
   if (typeof enrichedData !== "object" || Array.isArray(enrichedData)) {
-    return enrichedData
+    return enrichedData;
   }
 
-  const result: any = {}
+  const result: Record<string, unknown> = {};
 
   // Process each key in the enriched data
   for (const [key, enrichedValue] of Object.entries(enrichedData)) {
@@ -97,6 +97,7 @@ export function getAllPendingFields(
   const pendingFields: string[] = []
 
   for (const [key, diffInfo] of Object.entries(diffResult)) {
+    if (key === "@type") continue; // Never count @type as pending
     const currentPath = [...path, key]
     const fieldPath = currentPath.join(".")
     const validationState = validationStates[fieldPath] || ValidationState.PENDING
