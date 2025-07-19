@@ -61,24 +61,8 @@ export default function ProductDataEnrichment({ data }: { data: Product }) {
 					</p>
 				</div>
 
-				{/* Two Panel Layout */}
-				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-					{/* Left Panel - Original Product Data */}
-					<Card className="h-fit">
-						<CardHeader className="pb-4">
-							<CardTitle className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-								<div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-								Original Product Data
-							</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<div className="bg-gray-100 rounded-lg p-6 border-2 border-dashed border-gray-300">
-								<JsonTreeView data={originalProduct} />
-							</div>
-						</CardContent>
-					</Card>
-
-					{/* Right Panel - Enriched Product Data */}
+				{/* Single Panel Layout - Only Enriched Product Data */}
+				<div className="w-full px-2 sm:px-4 md:px-8 lg:px-16 xl:px-32 2xl:px-64">
 					<Card className="h-fit">
 						<CardHeader className="pb-4">
 							<CardTitle className="text-xl font-semibold text-gray-800 flex items-center gap-2">
@@ -108,17 +92,6 @@ export default function ProductDataEnrichment({ data }: { data: Product }) {
 
 				{/* Action Buttons */}
 				<div className="flex justify-center gap-4 mt-8">
-
-					<button
-						onClick={resetValidation}
-						className="px-6 py-3 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
-					>
-						Reset Validation
-					</button>
-				</div>
-
-				{/* Download Section */}
-				<div className="flex justify-center mt-6">
 					<DownloadButton
 						isEnabled={isDownloadEnabled}
 						pendingCount={pendingFields.length}

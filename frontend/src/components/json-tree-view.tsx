@@ -216,12 +216,41 @@ function JsonNode({
     return current
   }
 
+  // Helper: Should highlight the whole object block for new objects or arrays
+  const shouldHighlightWholeBlock = () => {
+    return (
+      diffType === DiffType.NEW &&
+      validationState === ValidationState.PENDING &&
+      isExpandable(displayValue)
+    );
+  };
+
+  // Helper: Is this node a child of a new array/object?
+  const isParentNewBlock = currentPath.length > 0 && diffResult && (() => {
+    const parentPath = currentPath;
+    const parentType = getDiffTypeForPath(diffResult, parentPath);
+    return parentType === DiffType.NEW;
+  })();
+
+  // Helper: Should highlight the value of a direct child of a new object/array
+  const isDirectChildOfNewBlock = currentPath.length > 0 && diffResult && (() => {
+    const parentPath = currentPath;
+    const parentType = getDiffTypeForPath(diffResult, parentPath);
+    return parentType === DiffType.NEW;
+  })();
+
   return (
-    <div className="font-mono text-sm">
+    <div className={`font-mono text-sm ${shouldHighlightWholeBlock() ? 'bg-green-50 border-l-4 border-green-400' : ''}`}>
       <div
         className={`flex items-center py-1 hover:bg-gray-50 rounded px-2 transition-colors group ${
           isExpandable(displayValue) ? "cursor-pointer" : "cursor-default"
-        } ${getDiffBackgroundClass(diffType, validationState)} ${
+        } ${
+          isDirectChildOfNewBlock && !shouldHighlightWholeBlock()
+            ? 'bg-green-50'
+            : (!isParentNewBlock && !shouldHighlightWholeBlock())
+              ? getDiffBackgroundClass(diffType, validationState)
+              : ''
+        } ${
           validationState !== ValidationState.PENDING ? "opacity-75" : ""
         }`}
         onClick={handleToggle}
@@ -351,7 +380,7 @@ function JsonNode({
                   value={item}
                   level={level + 1}
                   isLast={index === displayValue.length - 1}
-                  diffResult={diffResult}
+                  diffResult={diffResult} // keep parent diffResult for array children
                   currentPath={nodePath}
                   validationStates={validationStates}
                   onValidation={onValidation}
@@ -368,7 +397,7 @@ function JsonNode({
                   value={val as JsonValue}
                   level={level + 1}
                   isLast={index === array.length - 1}
-                  diffResult={getNestedDiffResult()}
+                  diffResult={diffResult} // use parent diffResult for object children
                   currentPath={nodePath}
                   validationStates={validationStates}
                   onValidation={onValidation}
