@@ -8,7 +8,10 @@ on e-commerce pages, filtering out suggestions, recommendations, and related pro
 import re
 from typing import Dict, List, Any, Optional, Tuple
 from urllib.parse import urlparse
-from .utils import logger
+import logging
+
+# Set up logger
+logger = logging.getLogger(__name__)
 
 
 class MainProductDetector:
@@ -20,34 +23,61 @@ class MainProductDetector:
     4. Page layout patterns
     """
     
-    def __init__(self):
-        # Main product URL patterns (high confidence)
-        self.main_product_url_patterns = [
-            r'/products?/([^/]+)/?$',           # /product/name or /products/name
-            r'/liquids/([^/]+)/?$',            # /liquids/name (for e-liquid sites)
-            r'/item/([^/]+)/?$',               # /item/name
-            r'/p/([^/]+)/?$',                  # /p/name
-            r'/buy/([^/]+)/?$',                # /buy/name
-            r'/detail/([^/]+)/?$',             # /detail/name
-            r'/shop/([^/]+)/?$',               # /shop/name (when single product)
-            r'/([^/]+)\.html?$',               # product-name.html
-            r'/([^/]+)\.html?[#?]',            # product-name.html with params/hash
-        ]
+    def __init__(self, config=None):
+        """
+        Initialize main product detector.
         
-        # Suggestion/recommendation indicators (negative signals)
-        self.suggestion_indicators = [
-            'related', 'recommended', 'suggestion', 'similar', 'other',
-            'you-might', 'also-like', 'customers-also', 'more-from',
-            'recently-viewed', 'trending', 'popular', 'bestseller',
-            'bundle', 'addon', 'accessory', 'complement'
-        ]
-        
-        # Main product area indicators (positive signals)
-        self.main_product_indicators = [
-            'product-main', 'product-detail', 'product-info', 'product-page',
-            'main-product', 'primary-product', 'product-hero', 'product-focus',
-            'pdp-main', 'item-detail', 'product-container', 'product-wrapper'
-        ]
+        Args:
+            config: Optional DetectionConfig instance, uses global config if None
+        """
+        if config is None:
+            # Use default config
+            self.config = self._get_default_config()
+        else:
+            self.config = config.config if hasattr(config, 'config') else config
+    
+    def _get_default_config(self) -> Dict[str, Any]:
+        """Get default configuration."""
+        return {
+            'main_product_url_patterns': [
+                r'/products?/([^/]+)/?$',
+                r'/liquids/([^/]+)/?$',
+                r'/item/([^/]+)/?$',
+                r'/p/([^/]+)/?$',
+                r'/buy/([^/]+)/?$',
+                r'/detail/([^/]+)/?$',
+                r'/shop/([^/]+)/?$',
+                r'/([^/]+)\.html?$',
+                r'/([^/]+)\.html?[#?]',
+            ],
+            'suggestion_indicators': [
+                'related', 'recommended', 'suggestion', 'similar', 'other',
+                'you-might', 'also-like', 'customers-also', 'more-from',
+                'recently-viewed', 'trending', 'popular', 'bestseller',
+                'bundle', 'addon', 'accessory', 'complement'
+            ],
+            'main_product_indicators': [
+                'product-main', 'product-detail', 'product-info', 'product-page',
+                'main-product', 'primary-product', 'product-hero', 'product-focus',
+                'pdp-main', 'item-detail', 'product-container', 'product-wrapper'
+            ],
+            'scoring_thresholds': {
+                'url_match_strong': 70,
+                'score_difference_clear': 15,
+                'high_confidence_minimum': 40
+            },
+            'scoring_weights': {
+                'url_pattern_match': 25,
+                'word_match_per_word': 20,
+                'high_ratio_bonus': 30,
+                'exact_substring_match': 50,
+                'schema_essential_field': 5,
+                'schema_detailed_field': 2,
+                'offer_price': 8,
+                'html_main_indicator': 15,
+                'html_position_above_fold': 10
+            }
+        }
 
     async def identify_main_product(self, page, products: List[Dict[str, Any]], 
                                   current_url: str) -> Optional[Dict[str, Any]]:
@@ -97,16 +127,17 @@ class MainProductDetector:
         # Return the highest scoring product
         best_product, best_score = product_scores[0]
         
-        # Enhanced decision logic
+        # Enhanced decision logic using config thresholds
+        thresholds = self.config['scoring_thresholds']
+        
         if len(product_scores) > 1:
             second_best_score = product_scores[1][1]
             score_difference = best_score - second_best_score
             
-            # Lower threshold for clear winner detection (15 instead of 20)
-            if score_difference >= 15:
+            if score_difference >= thresholds['score_difference_clear']:
                 logger.info(f"Clear main product identified with score {best_score} (margin: {score_difference})")
                 return best_product
-            elif best_score >= 40:  # Lower absolute threshold
+            elif best_score >= thresholds['high_confidence_minimum']:
                 logger.info(f"High confidence main product with score {best_score}")
                 return best_product
             else:
@@ -149,8 +180,9 @@ class MainProductDetector:
                 best_score = score
                 best_match = product
         
-        # Only return if we have a strong match (score > 70)
-        if best_score > 70:
+        # Only return if we have a strong match
+        threshold = self.config['scoring_thresholds']['url_match_strong']
+        if best_score > threshold:
             logger.info(f"Strong URL match found with score {best_score}")
             return best_match
         
@@ -159,6 +191,9 @@ class MainProductDetector:
     
     def _calculate_url_relevance(self, product_name: str, url_slug: str, full_url: str) -> int:
         """Calculate how well a product name matches the URL."""
+        if not product_name or not url_slug:
+            return 0
+        
         score = 0
         
         # Clean product name and URL for comparison
@@ -170,11 +205,12 @@ class MainProductDetector:
         product_words = [word.lower() for word in re.findall(r'\w+', product_name) if len(word) > 3]
         
         # Check each significant word in URL
+        weights = self.config['scoring_weights']
         words_in_url = 0
         for word in product_words:
             if word in clean_url_slug or word in clean_full_url:
                 words_in_url += 1
-                score += 20  # 20 points per matching word
+                score += weights['word_match_per_word']
         
         # Bonus for high word match ratio
         if product_words:
@@ -239,11 +275,12 @@ class MainProductDetector:
     def _analyze_url_patterns(self, url: str, product_name: str) -> int:
         """Analyze URL patterns to determine if this is likely a main product page."""
         score = 0
+        weights = self.config['scoring_weights']
         
         # Check if URL matches main product patterns
-        for pattern in self.main_product_url_patterns:
+        for pattern in self.config['main_product_url_patterns']:
             if re.search(pattern, url, re.IGNORECASE):
-                score += 25
+                score += weights['url_pattern_match']
                 logger.debug(f"URL matches main product pattern: {pattern}")
                 break
         
