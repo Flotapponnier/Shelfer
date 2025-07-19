@@ -1,0 +1,348 @@
+[
+    {
+        "@context": "https:\/\/schema.org\/",
+        "@type": "ProductGroup",
+        "@id": "#product",
+        "name": "Stoic - Women's S\u00e4lkaSt. Tour Shorts - Shorts",
+        "url": "https:\/\/www.bergfreunde.de\/stoic-womens-saelkast-tour-shorts-shorts\/",
+        "description": "Robuste Trekkingshorts mit Beintaschen\nDie Women's\u00a0S\u00e4lkaSt.Tour Shorts\u00a0von Stoic besteht aus einem \u00e4u\u00dferst robusten und abriebfesten Canvas-Gewebe. An strategisch sinnvollen Stellen wird dieses mit Softshell-Eins\u00e4tzen erg\u00e4nzt. Diese steigern die Atmungsaktivit\u00e4t und erzeugen einen angenehmen Stretch, der die Bewegungsfreiheit steigert. Dank der PFC-freien DWR-Impr\u00e4gnierung ist die Trekkingshorts vor leichtem Regen und Schlammspritzern gesch\u00fctzt.\n\u00dcbersichtlicher Stauraum\nNeben den beiden Fronttaschen befinden sich noch zwei ger\u00e4umige Beintaschen mit Rei\u00dfverschluss an der Women's\u00a0S\u00e4lkaSt.Tour Shorts. In der rechten dieser Taschen ist noch eine zus\u00e4tzliche Mesh-Tasche eingen\u00e4ht, in der sich das Smartphone perfekt verstauen l\u00e4sst. Dank dieser Vielzahl an Taschen lassen sich die vielen Kleinteile, die es bei einer ausgedehnten Wandertour oder Trekkingtour braucht, \u00fcbersichtlich, sicher und griffbereit in der Hose verstauen.\nDeine Vorteile im \u00dcberblick:\n\nRobuste Trekkingshorts aus Canvas\nEins\u00e4tze aus Softshell bieten Flexibilit\u00e4t und Atmungsaktivit\u00e4t\nDWR-Impr\u00e4gnierung sch\u00fctzt vor N\u00e4sse und Schlamm\nGer\u00e4umige Beintaschen mit interner Smartphonetasche\n\n\n",
+        "brand": {
+            "@type": "Brand",
+            "name": "Stoic"
+        },
+        "audience": {
+            "@type": "PeopleAudience",
+            "suggestedGender": "women"
+        },
+        "productGroupID": "112-2189",
+        "variesBy": [
+            "https:\/\/schema.org\/size",
+            "https:\/\/schema.org\/color"
+        ],
+        "hasVariant": [
+            {
+                "@type": "Product",
+                "sku": "112-2189-0111",
+                "gtin": "5714855001666",
+                "image": "https:\/\/www.bfgcdn.com\/out\/pictures\/generated\/product\/1\/600_600_90\/sol_112-2189-0111_pic1_1.jpg",
+                "name": "Stoic - Women's S\u00e4lkaSt. Tour Shorts - Shorts - Black | 34 (EU)",
+                "description": "Robuste Trekkingshorts mit Beintaschen",
+                "color": "Black",
+                "size": "34",
+                "offers": {
+                    "@type": "Offer",
+                    "url": "https:\/\/www.bergfreunde.de\/stoic-womens-saelkast-tour-shorts-shorts\/?aid=591d6d06bdc344da257903d3afcc5bb7&amp;",
+                    "priceCurrency": "EUR",
+                    "price": 29.99,
+                    "itemCondition": "https:\/\/schema.org\/NewCondition",
+                    "availability": "https:\/\/schema.org\/InStock",
+                    "shippingDetails": {
+                        "@id": "#shipping_policy"
+                    }
+                }
+            },
+            {
+                "@type": "Product",
+                "sku": "112-2189-0211",
+                "gtin": "5714855001734",
+                "image": "https:\/\/www.bfgcdn.com\/out\/pictures\/generated\/product\/1\/600_600_90\/sol_112-2189-0211_pic1_1.jpg",
+                "name": "Stoic - Women's S\u00e4lkaSt. Tour Shorts - Shorts - Forest Green | 34 (EU)",
+                "description": "Robuste Trekkingshorts mit Beintaschen",
+                "color": "Forest Green",
+                "size": "34",
+                "offers": {
+                    "@type": "Offer",
+                    "url": "https:\/\/www.bergfreunde.de\/stoic-womens-saelkast-tour-shorts-shorts\/?aid=673df52b093f291828c52360f8a8b8c6&amp;",
+                    "priceCurrency": "EUR",
+                    "price": 29.99,
+                    "itemCondition": "https:\/\/schema.org\/NewCondition",
+                    "availability": "https:\/\/schema.org\/InStock",
+                    "shippingDetails": {
+                        "@id": "#shipping_policy"
+                    }
+                }
+            },
+            {
+                "@type": "Product",
+                "sku": "112-2189-0112",
+                "gtin": "5714855001673",
+                "image": "https:\/\/www.bfgcdn.com\/out\/pictures\/generated\/product\/1\/600_600_90\/sol_112-2189-0111_pic1_1.jpg",
+                "name": "Stoic - Women's S\u00e4lkaSt. Tour Shorts - Shorts - Black | 36 (EU)",
+                "description": "Robuste Trekkingshorts mit Beintaschen",
+                "color": "Black",
+                "size": "36",
+                "offers": {
+                    "@type": "Offer",
+                    "url": "https:\/\/www.bergfreunde.de\/stoic-womens-saelkast-tour-shorts-shorts\/?aid=35733b94721f462a02e59c9d5abab36f&amp;",
+                    "priceCurrency": "EUR",
+                    "price": 29.99,
+                    "itemCondition": "https:\/\/schema.org\/NewCondition",
+                    "availability": "https:\/\/schema.org\/InStock",
+                    "shippingDetails": {
+                        "@id": "#shipping_policy"
+                    }
+                }
+            },
+            {
+                "@type": "Product",
+                "sku": "112-2189-0212",
+                "gtin": "5714855001741",
+                "image": "https:\/\/www.bfgcdn.com\/out\/pictures\/generated\/product\/1\/600_600_90\/sol_112-2189-0211_pic1_1.jpg",
+                "name": "Stoic - Women's S\u00e4lkaSt. Tour Shorts - Shorts - Forest Green | 36 (EU)",
+                "description": "Robuste Trekkingshorts mit Beintaschen",
+                "color": "Forest Green",
+                "size": "36",
+                "offers": {
+                    "@type": "Offer",
+                    "url": "https:\/\/www.bergfreunde.de\/stoic-womens-saelkast-tour-shorts-shorts\/?aid=87309d6a185ead4e91d646e84572c75d&amp;",
+                    "priceCurrency": "EUR",
+                    "price": 29.99,
+                    "itemCondition": "https:\/\/schema.org\/NewCondition",
+                    "availability": "https:\/\/schema.org\/InStock",
+                    "shippingDetails": {
+                        "@id": "#shipping_policy"
+                    }
+                }
+            },
+            {
+                "@type": "Product",
+                "sku": "112-2189-0113",
+                "gtin": "5714855001680",
+                "image": "https:\/\/www.bfgcdn.com\/out\/pictures\/generated\/product\/1\/600_600_90\/sol_112-2189-0111_pic1_1.jpg",
+                "name": "Stoic - Women's S\u00e4lkaSt. Tour Shorts - Shorts - Black | 38 (EU)",
+                "description": "Robuste Trekkingshorts mit Beintaschen",
+                "color": "Black",
+                "size": "38",
+                "offers": {
+                    "@type": "Offer",
+                    "url": "https:\/\/www.bergfreunde.de\/stoic-womens-saelkast-tour-shorts-shorts\/?aid=c2ae13627a1ae0a22555df973245a6e8&amp;",
+                    "priceCurrency": "EUR",
+                    "price": 29.99,
+                    "itemCondition": "https:\/\/schema.org\/NewCondition",
+                    "availability": "https:\/\/schema.org\/OutOfStock",
+                    "shippingDetails": {
+                        "@id": "#shipping_policy"
+                    }
+                }
+            },
+            {
+                "@type": "Product",
+                "sku": "112-2189-0213",
+                "gtin": "5714855001758",
+                "image": "https:\/\/www.bfgcdn.com\/out\/pictures\/generated\/product\/1\/600_600_90\/sol_112-2189-0211_pic1_1.jpg",
+                "name": "Stoic - Women's S\u00e4lkaSt. Tour Shorts - Shorts - Forest Green | 38 (EU)",
+                "description": "Robuste Trekkingshorts mit Beintaschen",
+                "color": "Forest Green",
+                "size": "38",
+                "offers": {
+                    "@type": "Offer",
+                    "url": "https:\/\/www.bergfreunde.de\/stoic-womens-saelkast-tour-shorts-shorts\/?aid=9435d08e30a93920adc4eb07fd89993a&amp;",
+                    "priceCurrency": "EUR",
+                    "price": 29.99,
+                    "itemCondition": "https:\/\/schema.org\/NewCondition",
+                    "availability": "https:\/\/schema.org\/OutOfStock",
+                    "shippingDetails": {
+                        "@id": "#shipping_policy"
+                    }
+                }
+            },
+            {
+                "@type": "Product",
+                "sku": "112-2189-0114",
+                "gtin": "5714855001697",
+                "image": "https:\/\/www.bfgcdn.com\/out\/pictures\/generated\/product\/1\/600_600_90\/sol_112-2189-0111_pic1_1.jpg",
+                "name": "Stoic - Women's S\u00e4lkaSt. Tour Shorts - Shorts - Black | 40 (EU)",
+                "description": "Robuste Trekkingshorts mit Beintaschen",
+                "color": "Black",
+                "size": "40",
+                "offers": {
+                    "@type": "Offer",
+                    "url": "https:\/\/www.bergfreunde.de\/stoic-womens-saelkast-tour-shorts-shorts\/?aid=f8ccfa6bf815ffd2fddc0d9f6d5fb551&amp;",
+                    "priceCurrency": "EUR",
+                    "price": 29.99,
+                    "itemCondition": "https:\/\/schema.org\/NewCondition",
+                    "availability": "https:\/\/schema.org\/OutOfStock",
+                    "shippingDetails": {
+                        "@id": "#shipping_policy"
+                    }
+                }
+            },
+            {
+                "@type": "Product",
+                "sku": "112-2189-0214",
+                "gtin": "5714855001765",
+                "image": "https:\/\/www.bfgcdn.com\/out\/pictures\/generated\/product\/1\/600_600_90\/sol_112-2189-0211_pic1_1.jpg",
+                "name": "Stoic - Women's S\u00e4lkaSt. Tour Shorts - Shorts - Forest Green | 40 (EU)",
+                "description": "Robuste Trekkingshorts mit Beintaschen",
+                "color": "Forest Green",
+                "size": "40",
+                "offers": {
+                    "@type": "Offer",
+                    "url": "https:\/\/www.bergfreunde.de\/stoic-womens-saelkast-tour-shorts-shorts\/?aid=6f35b7ce9a8589b2830e7d523f1f5598&amp;",
+                    "priceCurrency": "EUR",
+                    "price": 29.99,
+                    "itemCondition": "https:\/\/schema.org\/NewCondition",
+                    "availability": "https:\/\/schema.org\/OutOfStock",
+                    "shippingDetails": {
+                        "@id": "#shipping_policy"
+                    }
+                }
+            },
+            {
+                "@type": "Product",
+                "sku": "112-2189-0115",
+                "gtin": "5714855001703",
+                "image": "https:\/\/www.bfgcdn.com\/out\/pictures\/generated\/product\/1\/600_600_90\/sol_112-2189-0111_pic1_1.jpg",
+                "name": "Stoic - Women's S\u00e4lkaSt. Tour Shorts - Shorts - Black | 42 (EU)",
+                "description": "Robuste Trekkingshorts mit Beintaschen",
+                "color": "Black",
+                "size": "42",
+                "offers": {
+                    "@type": "Offer",
+                    "url": "https:\/\/www.bergfreunde.de\/stoic-womens-saelkast-tour-shorts-shorts\/?aid=c7fe8b906f75400813481b3758177a35&amp;",
+                    "priceCurrency": "EUR",
+                    "price": 29.99,
+                    "itemCondition": "https:\/\/schema.org\/NewCondition",
+                    "availability": "https:\/\/schema.org\/OutOfStock",
+                    "shippingDetails": {
+                        "@id": "#shipping_policy"
+                    }
+                }
+            },
+            {
+                "@type": "Product",
+                "sku": "112-2189-0215",
+                "gtin": "5714855001772",
+                "image": "https:\/\/www.bfgcdn.com\/out\/pictures\/generated\/product\/1\/600_600_90\/sol_112-2189-0211_pic1_1.jpg",
+                "name": "Stoic - Women's S\u00e4lkaSt. Tour Shorts - Shorts - Forest Green | 42 (EU)",
+                "description": "Robuste Trekkingshorts mit Beintaschen",
+                "color": "Forest Green",
+                "size": "42",
+                "offers": {
+                    "@type": "Offer",
+                    "url": "https:\/\/www.bergfreunde.de\/stoic-womens-saelkast-tour-shorts-shorts\/?aid=1574c90eb2ee8d1a1c8643a5c131fae2&amp;",
+                    "priceCurrency": "EUR",
+                    "price": 29.99,
+                    "itemCondition": "https:\/\/schema.org\/NewCondition",
+                    "availability": "https:\/\/schema.org\/OutOfStock",
+                    "shippingDetails": {
+                        "@id": "#shipping_policy"
+                    }
+                }
+            },
+            {
+                "@type": "Product",
+                "sku": "112-2189-0116",
+                "gtin": "5714855001710",
+                "image": "https:\/\/www.bfgcdn.com\/out\/pictures\/generated\/product\/1\/600_600_90\/sol_112-2189-0111_pic1_1.jpg",
+                "name": "Stoic - Women's S\u00e4lkaSt. Tour Shorts - Shorts - Black | 44 (EU)",
+                "description": "Robuste Trekkingshorts mit Beintaschen",
+                "color": "Black",
+                "size": "44",
+                "offers": {
+                    "@type": "Offer",
+                    "url": "https:\/\/www.bergfreunde.de\/stoic-womens-saelkast-tour-shorts-shorts\/?aid=386997591335ad28bdec31590833327b&amp;",
+                    "priceCurrency": "EUR",
+                    "price": 29.99,
+                    "itemCondition": "https:\/\/schema.org\/NewCondition",
+                    "availability": "https:\/\/schema.org\/OutOfStock",
+                    "shippingDetails": {
+                        "@id": "#shipping_policy"
+                    }
+                }
+            },
+            {
+                "@type": "Product",
+                "sku": "112-2189-0216",
+                "gtin": "5714855001789",
+                "image": "https:\/\/www.bfgcdn.com\/out\/pictures\/generated\/product\/1\/600_600_90\/sol_112-2189-0211_pic1_1.jpg",
+                "name": "Stoic - Women's S\u00e4lkaSt. Tour Shorts - Shorts - Forest Green | 44 (EU)",
+                "description": "Robuste Trekkingshorts mit Beintaschen",
+                "color": "Forest Green",
+                "size": "44",
+                "offers": {
+                    "@type": "Offer",
+                    "url": "https:\/\/www.bergfreunde.de\/stoic-womens-saelkast-tour-shorts-shorts\/?aid=7cd82febba404eb36ee49a1f00bae96b&amp;",
+                    "priceCurrency": "EUR",
+                    "price": 29.99,
+                    "itemCondition": "https:\/\/schema.org\/NewCondition",
+                    "availability": "https:\/\/schema.org\/OutOfStock",
+                    "shippingDetails": {
+                        "@id": "#shipping_policy"
+                    }
+                }
+            },
+            {
+                "@type": "Product",
+                "sku": "112-2189-0117",
+                "gtin": "5714855001727",
+                "image": "https:\/\/www.bfgcdn.com\/out\/pictures\/generated\/product\/1\/600_600_90\/sol_112-2189-0111_pic1_1.jpg",
+                "name": "Stoic - Women's S\u00e4lkaSt. Tour Shorts - Shorts - Black | 46 (EU)",
+                "description": "Robuste Trekkingshorts mit Beintaschen",
+                "color": "Black",
+                "size": "46",
+                "offers": {
+                    "@type": "Offer",
+                    "url": "https:\/\/www.bergfreunde.de\/stoic-womens-saelkast-tour-shorts-shorts\/?aid=b7f5ce440c492b2e4bdbb753686b3d7a&amp;",
+                    "priceCurrency": "EUR",
+                    "price": 29.99,
+                    "itemCondition": "https:\/\/schema.org\/NewCondition",
+                    "availability": "https:\/\/schema.org\/OutOfStock",
+                    "shippingDetails": {
+                        "@id": "#shipping_policy"
+                    }
+                }
+            },
+            {
+                "@type": "Product",
+                "sku": "112-2189-0217",
+                "gtin": "5714855001796",
+                "image": "https:\/\/www.bfgcdn.com\/out\/pictures\/generated\/product\/1\/600_600_90\/sol_112-2189-0211_pic1_1.jpg",
+                "name": "Stoic - Women's S\u00e4lkaSt. Tour Shorts - Shorts - Forest Green | 46 (EU)",
+                "description": "Robuste Trekkingshorts mit Beintaschen",
+                "color": "Forest Green",
+                "size": "46",
+                "offers": {
+                    "@type": "Offer",
+                    "url": "https:\/\/www.bergfreunde.de\/stoic-womens-saelkast-tour-shorts-shorts\/?aid=80338d6fe0b7184da7601a3092f3eb65&amp;",
+                    "priceCurrency": "EUR",
+                    "price": 29.99,
+                    "itemCondition": "https:\/\/schema.org\/NewCondition",
+                    "availability": "https:\/\/schema.org\/OutOfStock",
+                    "shippingDetails": {
+                        "@id": "#shipping_policy"
+                    }
+                }
+            }
+        ]
+    },
+    {
+        "@context": "https:\/\/schema.org\/",
+        "@type": "OfferShippingDetails",
+        "@id": "#shipping_policy",
+        "shippingRate": {
+            "@type": "MonetaryAmount",
+            "value": 3.45,
+            "currency": "EUR"
+        },
+        "shippingDestination": {
+            "@type": "DefinedRegion",
+            "addressCountry": "DE"
+        },
+        "deliveryTime": {
+            "@type": "ShippingDeliveryTime",
+            "handlingTime": {
+                "@type": "QuantitativeValue",
+                "minValue": 1,
+                "maxValue": 2,
+                "unitCode": "DAY"
+            },
+            "transitTime": {
+                "@type": "QuantitativeValue",
+                "minValue": 1,
+                "maxValue": 2,
+                "unitCode": "DAY"
+            }
+        }
+    }
+]
