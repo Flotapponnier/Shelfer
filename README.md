@@ -1,5 +1,35 @@
 # AI-Powered Schema.org Product Enrichment Platform
 
+## Product Brief
+
+**Problem Statement:** E-commerce and product websites typically contain rich, unstructured data (descriptions, images, reviews, specifications) that LLMs struggle to process effectively. Meanwhile, existing schema.org Product markup on these pages is often sparse, missing critical structured data that could improve SEO, discoverability, and machine readability.
+
+**Solution:** An AI-powered enrichment platform that transforms unstructured product page content into comprehensive, structured schema.org Product data through intelligent scraping, filtering, and LLM-based field extraction.
+
+**Core Workflow (Fully Automated Pipeline):**
+
+1. **Input:** User provides a product page URL via `/enrich-product-schema` API
+2. **Scraping:** System extracts HTML content, images, and existing JSON-LD from the target page
+3. **Extraction:** AI-powered extractors identify relevant HTML contexts for 32 schema.org properties:
+   - **HTML Extractor:** Processes 22 properties from product HTML content
+   - **Image Extractor:** Analyzes 10 visual properties using GPT-4o vision model
+4. **Enrichment:** LLM converts extracted contexts into structured schema.org properties:
+   - Core product data (name, description, brand, category)
+   - Commercial data (price, currency, availability, condition) 
+   - Rich attributes (color, material, size, ratings, reviews)
+   - Advanced properties (return policy, country of origin, audience targeting)
+5. **Response:** Returns comprehensive results including:
+   - Raw scraped data, extraction results, and enriched schema.org JSON
+   - Detailed metadata and success rates for each pipeline stage
+
+**Key Benefits:**
+
+- Transforms unstructured web content into structured, SEO-friendly data
+- Dramatically reduces manual effort in creating comprehensive product schemas
+- Improves product discoverability through richer structured data
+- Maintains data quality through human oversight and validation
+- Supports 23+ schema.org Product properties out-of-the-box
+
 ## Quick Start
 
 ### Prerequisites
@@ -49,6 +79,20 @@ npm run dev
 - **Backend API:** http://localhost:8000
 - **API Documentation:** http://localhost:8000/docs
 
+### Test the Complete Pipeline
+
+```bash
+# Test the full pipeline: Scraper → Extractor → Enricher
+curl -X POST http://localhost:8000/enrich-product-schema \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com/product-page"}' | jq .
+
+# Check just the enriched schema
+curl -X POST http://localhost:8000/enrich-product-schema \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com/product-page"}' | jq .enriched_schema
+```
+
 ### Available Make Commands
 
 ```bash
@@ -63,34 +107,6 @@ make test-html-extractor      # Run HTML extractor service test
 make test-image-extractor     # Run image extractor service test
 make test-all                 # Run all extractor service tests
 ```
-
-## Product Brief
-
-**Problem Statement:** E-commerce and product websites typically contain rich, unstructured data (descriptions, images, reviews, specifications) that LLMs struggle to process effectively. Meanwhile, existing schema.org Product markup on these pages is often sparse, missing critical structured data that could improve SEO, discoverability, and machine readability.
-
-**Solution:** An AI-powered enrichment platform that transforms unstructured product page content into comprehensive, structured schema.org Product data through intelligent scraping, filtering, and LLM-based field extraction.
-
-**Core Workflow:**
-
-1. **Input:** User provides a product page URL
-2. **Scraping:** System extracts HTML content and images from the target page
-3. **Filtering:** Relevant product-specific content is isolated from noise (navigation, ads, etc.)
-4. **AI Enrichment:** LLM processes filtered content to extract structured data for 23+ predefined schema.org properties including:
-   - Core product data (name, description, brand, category)
-   - Commercial data (price, currency, availability, condition)
-   - Rich attributes (color, material, size, ratings, reviews)
-   - Advanced properties (return policy, country of origin, audience targeting)
-5. **Consensus Building:** Multiple AI suggestions are merged into a unified schema
-6. **Human Validation:** HITL (Human-in-the-Loop) system for field-by-field approval/rejection
-7. **Output:** Enriched, validated schema.org Product JSON returned to client
-
-**Key Benefits:**
-
-- Transforms unstructured web content into structured, SEO-friendly data
-- Dramatically reduces manual effort in creating comprehensive product schemas
-- Improves product discoverability through richer structured data
-- Maintains data quality through human oversight and validation
-- Supports 23+ schema.org Product properties out-of-the-box
 
 **Technical Architecture:** Next.js frontend with Python FastAPI backend, featuring modular scraper, enricher, and merger components integrated with OpenAI's GPT models.
 
@@ -324,98 +340,122 @@ all_contexts = {**html_contexts.html_contexts, **image_contexts}
 
 ## Enrichment Service
 
-The **Enrichment Service** takes the output from the HTML Extractor (or similar input) and uses LLMs to fill in schema.org Product properties, returning a comprehensive, enriched product schema.
+The **Enrichment Service** takes the output from the HTML and Image Extractors and uses LLMs to convert extracted contexts into schema.org Product properties, returning a comprehensive, enriched product schema. **Now fully integrated into the main API pipeline.**
 
-### Usage
+### Integration in API Pipeline
+
+The enricher is **automatically called** in the `/enrich-product-schema` endpoint as the final step:
+
+```
+URL Input → Scraper → Extractor (HTML + Images) → Enricher → Enhanced Response
+```
+
+### Standalone Usage
 
 ```python
 from enrichment.enricher import Enricher
 
-# Example input matching the expected format
-input_data = {
+# Clean, separated inputs (no redundancy!)
+product_metadata = {
+    "product_name": "Tennis Socks Premium",
+    "product_url": "https://snocks.com/products/tennissocken",
     "json_ld_schema": {
         "@context": "https://schema.org/",
-        "@type": "Product"
-    },
-    "html_contexts": {
-        "color": {
-            "relevant_html_product_context": "These stylish shorts are available in a vibrant blue, perfect for summer adventures.",
-            "product_name": "Test Backpack",
-            "product_url": "https://example.com/product/123"
-        },
-        "brand": {
-            "relevant_html_product_context": (
-                "This product is proudly made by Patagonia, a renowned outdoor apparel company known for its commitment to quality, sustainability, and environmental activism. "
-                "Patagonia products are designed for adventurers and outdoor enthusiasts who value durability, ethical manufacturing, and innovative design. "
-                "The brand is recognized worldwide for its responsible sourcing of materials and dedication to reducing environmental impact. "
-                "Choosing this product means supporting Patagonia's mission to create high-performance gear while protecting the planet."
-            ),
-            "product_name": "Test Backpack",
-            "product_url": "https://example.com/product/123"
-        },
-        "keywords": {
-            "relevant_html_product_context": """
-                <div>
-                    <h1>Test Backpack</h1>
-                    <p>
-                        The Test Backpack is designed for outdoor enthusiasts who love hiking, camping, and traveling.
-                        With its durable water-resistant material, multiple compartments for organization, and ergonomic padded straps,
-                        this backpack is perfect for long treks or daily commutes.
-                        Whether you're exploring mountain trails, heading to the gym, or packing for a weekend getaway,
-                        the Test Backpack offers versatility and comfort.
-                        <ul>
-                            <li>Spacious main compartment fits laptops up to 15 inches</li>
-                            <li>Side pockets for water bottles or snacks</li>
-                            <li>Reflective strips for safety during night hikes</li>
-                            <li>Available in blue, black, and green</li>
-                        </ul>
-                        <div class=\"promo-banner\">Limited time offer: Free shipping on all outdoor gear!</div>
-                        <footer>
-                            <span>Customer reviews: \"Perfect for hiking and travel!\"</span>
-                        </footer>
-                    </p>
-                </div>
-            """,
-            "product_name": "Test Backpack",
-            "product_url": "https://example.com/product/123"
-        }
+        "@type": "Product",
+        "name": "Tennis Socks Premium"
     }
 }
 
-result = Enricher.enrich(input_data)
-print(result)
+# HTML contexts from extractor output (clean, focused on content)
+html_contexts = {
+    "color": {
+        "relevant_html_product_context": "Available in Black, White, and Blue"
+    },
+    "brand": {
+        "relevant_html_product_context": "SNOCKS - Premium Athletic Wear"
+    },
+    "material": {
+        "relevant_html_product_context": "Made from premium cotton blend with moisture-wicking properties"
+    }
+}
+
+# Call enricher with clean interface
+result = Enricher.enrich(
+    product_metadata=product_metadata,
+    html_contexts=html_contexts
+)
+
 print("Enriched product data:", result.enriched_json_ld_schema)
 print("Original product data:", result.original_json_ld_schema)
 print("Not extracted properties:", result.not_extracted_properties)
 print("Finished:", result.finished)
 ```
 
-### Output
+### New Clean Interface
 
-- `result.data`: The enriched schema.org Product dictionary
-- `result.not_extracted_properties`: List of properties that could not be extracted
-- `result.finished`: `True` if all properties were successfully extracted, else `False`
+**Key Improvements:**
+- ✅ **No Redundancy**: Product metadata provided once, not repeated 32 times
+- ✅ **Separation of Concerns**: Product-level and property-level data are separated
+- ✅ **Better Performance**: Smaller payloads, cleaner code
 
 ### Input/Output Format
 
-**Input Format:**
+**Input Format (Standalone):**
 
-```json
-{
-  "json_ld_schema": { ... },
-  "html_contexts": {
+```python
+# Product metadata (provided once)
+product_metadata = {
+    "product_name": "Product Name",
+    "product_url": "https://example.com/product", 
+    "json_ld_schema": {...}  # Optional existing schema
+}
+
+# HTML contexts (clean, no repetition)
+html_contexts = {
     "offers.price": {
-      "relevant_html_product_context": "<span class='price'>$29.99</span>"
+        "relevant_html_product_context": "<span class='price'>$29.99</span>"
     },
     "description": {
-      "relevant_html_product_context": "<div class='desc'>Product details...</div>"
+        "relevant_html_product_context": "<div class='desc'>Product details...</div>"
     }
-  }
 }
 ```
 
 **Output:**
 
 - An `EnrichedProduct` object with `.enriched_json_ld_schema`, `.original_json_ld_schema`, `.not_extracted_properties`, and `.finished` attributes.
+
+### Enhanced API Response Format
+
+When using `/enrich-product-schema`, you now get comprehensive results:
+
+```json
+{
+  "url": "https://example.com/product",
+  "status": "success",
+  "scraped_data": {...},              // Raw scraper output
+  "extraction_results": {...},        // Extractor output (32 properties)
+  "extraction_metadata": {            // Extraction statistics
+    "html_properties_extracted": 22,
+    "image_properties_extracted": 10,
+    "overall_success_rate": 0.75
+  },
+  "enriched_schema": {                // NEW: Final enriched schema.org
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": "Product Name",
+    "offers": {"price": "29.99"},
+    "enriched": true
+  },
+  "original_schema": {...},           // NEW: Original JSON-LD found
+  "enrichment_metadata": {            // NEW: Enrichment statistics
+    "properties_processed": 25,
+    "properties_enriched": 20,
+    "success_rate": 0.80,
+    "schema_complete": false,
+    "failed_properties": ["size", "weight"]
+  }
+}
+```
 
 ---

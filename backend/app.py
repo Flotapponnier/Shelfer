@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from services.extractor_service import ExtractorService
+from enrichment.enricher import Enricher
 
 load_dotenv()
 
@@ -98,15 +99,74 @@ async def enrich_product_schema(request: URLRequest):
         print(f"   • HTML properties: {metadata.get('html_properties_extracted', 0)}")
         print(f"   • Image properties: {metadata.get('image_properties_extracted', 0)}")
         
-        # Return enriched product data
-        # TODO: Instead of returning we need to pass the data on to the "enricher" here
-        return {
+        # Step 3: Run enricher to convert extracted contexts into schema.org properties
+        print(f"✨ Step 3: Running schema enrichment...")
+        
+        # Prepare product metadata for enricher (clean, no redundancy)
+        product_metadata = {
+            "product_name": None,  # TODO: Could extract from HTML or let enricher infer
+            "product_url": request.url,
+            "json_ld_schema": extraction_result.get("json_ld_schema")
+        }
+        
+        # Get HTML contexts from extraction results  
+        html_contexts = extraction_result.get("html_contexts", {})
+        
+        try:
+            # Call enricher with clean interface
+            enriched_result = Enricher.enrich(
+                product_metadata=product_metadata,
+                html_contexts=html_contexts
+            )
+            
+            # Log enrichment summary
+            enriched_properties = len(html_contexts) - len(enriched_result.not_extracted_properties)
+            enrichment_success_rate = enriched_properties / len(html_contexts) if html_contexts else 0
+            
+            print(f"📈 Enrichment completed:")
+            print(f"   • Properties enriched: {enriched_properties}/{len(html_contexts)}")
+            print(f"   • Enrichment success rate: {enrichment_success_rate:.1%}")
+            print(f"   • Failed properties: {enriched_result.not_extracted_properties}")
+            print(f"   • Final schema complete: {enriched_result.finished}")
+            
+            enrichment_metadata = {
+                "properties_processed": len(html_contexts),
+                "properties_enriched": enriched_properties,
+                "properties_failed": len(enriched_result.not_extracted_properties),
+                "failed_properties": enriched_result.not_extracted_properties,
+                "success_rate": enrichment_success_rate,
+                "schema_complete": enriched_result.finished
+            }
+            
+        except Exception as e:
+            print(f"⚠️ Enrichment failed: {str(e)}")
+            # Continue with extraction results only
+            enriched_result = None
+            enrichment_metadata = {
+                "error": str(e),
+                "properties_processed": len(html_contexts),
+                "properties_enriched": 0,
+                "success_rate": 0,
+                "schema_complete": False
+            }
+        
+        # Return comprehensive results
+        response = {
             "url": request.url,
             "status": "success",
             "scraped_data": scraped_data,
             "extraction_results": extraction_result,
-            "processing_metadata": metadata
+            "extraction_metadata": metadata
         }
+        
+        # Add enrichment results if successful
+        if enriched_result:
+            response["enriched_schema"] = enriched_result.enriched_json_ld_schema
+            response["original_schema"] = enriched_result.original_json_ld_schema
+        
+        response["enrichment_metadata"] = enrichment_metadata
+        
+        return response
         
     except Exception as e:
         print(f"💥 FATAL ERROR in enrich-product-schema: {str(e)}")
