@@ -185,38 +185,55 @@ async def validate_schema(request: SchemaValidationRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Schema validation failed: {str(e)}")
 
-@app.post("/scrape-and-analyze")
-async def scrape_and_analyze(request: URLRequest):
-    """Simple endpoint: URL → scrapeProductContext only"""
-    print(f"\n🔄 RECEIVED SCRAPE REQUEST: {request.url}")
+async def get_product_context(productUrl: str):
+    """Helper function: calls scrapeProductContext(productUrl) and returns formatted result"""
+    from scraper.utils.product_context import scrapeProductContext
+    
+    # Call your scraper function with exact signature: scrapeProductContext(productUrl)
+    result = await scrapeProductContext(productUrl)
+    
+    # Ensure exact format: { relevantHtmlProductContext, images: { urlMainimage, otherMainImages }, schema.org }
+    return {
+        "relevantHtmlProductContext": result.get('relevantHtmlProductContext', ''),
+        "images": {
+            "urlMainimage": result.get('images', {}).get('urlMainimage', ''),
+            "otherMainImages": result.get('images', {}).get('otherMainImages', [])
+        },
+        "schema.org": result.get('schema.org', None)
+    }
+
+@app.post("/enrich-product-schema")
+async def enrich_product_schema(request: URLRequest):
+    """Product enrichment endpoint: URL → scrapeProductContext → enrichment pipeline"""
+    print(f"\n🔄 RECEIVED ENRICHMENT REQUEST: {request.url}")
     
     try:
-        print(f"🌐 Extracting product context from {request.url}...")
+        print(f"🌐 Step 1: Extracting product context from {request.url}...")
         
-        # Import and use only scrapeProductContext
-        from scraper.utils.product_context import scrapeProductContext
-        
-        # Single call to scrapeProductContext
-        result = await scrapeProductContext(request.url)
+        # Call helper function to get product context
+        productContext = await get_product_context(request.url)
         
         # Log the results
-        images = result.get('images', {})
-        print(f"[API] scrape-and-analyze urlMainimage: {images.get('urlMainimage')}")
-        print(f"[API] scrape-and-analyze otherMainImages: {images.get('otherMainImages')}")
-        html_context = result.get('relevantHtmlProductContext', '')
-        preview = html_context if len(html_context) < 200 else html_context[:200] + '...'
-        print(f"[API] scrape-and-analyze relevantHtmlProductContext: {preview}")
+        print(f"[API] enrich-product-schema urlMainimage: {productContext['images']['urlMainimage']}")
+        print(f"[API] enrich-product-schema otherMainImages: {productContext['images']['otherMainImages']}")
+        preview = productContext['relevantHtmlProductContext']
+        preview = preview if len(preview) < 200 else preview[:200] + '...'
+        print(f"[API] enrich-product-schema relevantHtmlProductContext: {preview}")
         
-        # Return scrapeProductContext result directly
+        # TODO: Add enrichment pipeline here - for now return scraper result
+        # This is where HTML extractor and enricher would be called
+        print(f"🧠 Step 2: AI enrichment pipeline (TODO - returning raw scraper data for now)")
+        
+        # Return the product context (enrichment pipeline will be added later)
         return {
             "url": request.url,
             "status": "success",
-            "productContext": result
+            "productContext": productContext
         }
         
     except Exception as e:
-        print(f"💥 FATAL ERROR in scrape-and-analyze: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Product context extraction failed: {str(e)}")
+        print(f"💥 FATAL ERROR in enrich-product-schema: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Product enrichment failed: {str(e)}")
 
 # Old scraper endpoints removed - using scrapeProductContext instead
 
