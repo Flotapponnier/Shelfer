@@ -215,52 +215,130 @@ async def scrape_and_analyze(request: URLRequest):
             print("⚠️  No product data found by scraper")
             return []
         
-        # Step 2: Analyze with our existing ChatGPT pipeline
-        results = []
+        # Step 2: Return raw scraper results for development
+        print(f"🎉 SCRAPER COMPLETE: Returning raw scraper data for development")
         
-        for i, product in enumerate(products_data, 1):
-            try:
-                print(f"🔍 Analyzing scraped product {i}/{len(products_data)}: {product.get('name', 'Unknown')}")
-                
-                # Validate required fields
-                if not validate_schema_org_product(product):
-                    print(f"⚠️  Product {i} failed validation - skipping")
-                    continue
-                
-                # Analyze with ChatGPT (existing pipeline)
-                print(f"🤖 Sending scraped product {i} to ChatGPT for analysis...")
-                analysis = await chatgpt_model.analyze_product(product)
-                print(f"✅ ChatGPT analysis complete for product {i} - Score: {analysis.get('overall_score', 'N/A')}/100")
-                
-                # Convert to response model
-                response = ProductAnalysisResponse(**analysis)
-                results.append(response)
-                
-            except Exception as e:
-                print(f"❌ Error analyzing scraped product {i}: {str(e)}")
-                error_response = ProductAnalysisResponse(
-                    overall_score=0,
-                    strengths=[],
-                    weaknesses=["Analysis failed"],
-                    improvements=[],
-                    seo_recommendations=[],
-                    missing_fields=[],
-                    conversion_tips=[],
-                    error=str(e)
-                )
-                results.append(error_response)
+        # Return the complete scraper result for debugging and development
+        return {
+            "scraped_products": products_data,
+            "scraper_summary": scraper_result.get('crawler_summary', {}),
+            "scraper_stats": {
+                "products_found": len(products_data),
+                "total_schemas": len(scraper_result.get('all_schemas', [])),
+                "non_product_schemas": len(scraper_result.get('non_product_schemas', []))
+            }
+        }
         
-        print(f"🎉 SCRAPE & ANALYSIS ARCHITECTURE COMPLETE: Returning {len(results)} analyses")
-        return results
+        # COMMENTED OUT FOR SCRAPER DEVELOPMENT:
+        # ========================================
+        # # Step 2: Analyze with our existing ChatGPT pipeline
+        # results = []
+        # 
+        # for i, product in enumerate(products_data, 1):
+        #     try:
+        #         print(f"🔍 Analyzing scraped product {i}/{len(products_data)}: {product.get('name', 'Unknown')}")
+        #         
+        #         # Validate required fields
+        #         if not validate_schema_org_product(product):
+        #             print(f"⚠️  Product {i} failed validation - skipping")
+        #             continue
+        #         
+        #         # Analyze with ChatGPT (existing pipeline)
+        #         print(f"🤖 Sending scraped product {i} to ChatGPT for analysis...")
+        #         analysis = await chatgpt_model.analyze_product(product)
+        #         print(f"✅ ChatGPT analysis complete for product {i} - Score: {analysis.get('overall_score', 'N/A')}/100")
+        #         
+        #         # Convert to response model
+        #         response = ProductAnalysisResponse(**analysis)
+        #         results.append(response)
+        #         
+        #     except Exception as e:
+        #         print(f"❌ Error analyzing scraped product {i}: {str(e)}")
+        #         error_response = ProductAnalysisResponse(
+        #             overall_score=0,
+        #             strengths=[],
+        #             weaknesses=["Analysis failed"],
+        #             improvements=[],
+        #             seo_recommendations=[],
+        #             missing_fields=[],
+        #             conversion_tips=[],
+        #             error=str(e)
+        #         )
+        #         results.append(error_response)
+        # 
+        # print(f"🎉 SCRAPE & ANALYSIS ARCHITECTURE COMPLETE: Returning {len(results)} analyses")
+        # return results
         
     except Exception as e:
         print(f"💥 FATAL ERROR in scrape-and-analyze: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Scrape and analysis failed: {str(e)}")
 
+@app.post("/scrape-only")
+async def scrape_only(request: URLRequest):
+    """Scraper development endpoint - returns raw scraper data only"""
+    print(f"\n🔧 SCRAPER DEV MODE: Scraping {request.url}")
+    
+    try:
+        # Import scraper
+        from scraper.main import scrape_domain
+        
+        # Call the scraper with detailed logging
+        print(f"🌐 Starting scraper for: {request.url}")
+        scraper_result = await scrape_domain(
+            domain_url=request.url,
+            headless=True,
+            max_products=10,
+            delay=1.0,
+            min_jsonld_products=1
+        )
+        
+        # Extract data
+        products_data = scraper_result.get('product_schemas', [])
+        all_schemas = scraper_result.get('all_schemas', [])
+        non_product_schemas = scraper_result.get('non_product_schemas', [])
+        
+        print(f"🎯 SCRAPER RESULTS:")
+        print(f"   📦 Products found: {len(products_data)}")
+        print(f"   📄 Total schemas: {len(all_schemas)}")
+        print(f"   🔧 Non-product schemas: {len(non_product_schemas)}")
+        
+        # Return comprehensive scraper data for development
+        return {
+            "url": request.url,
+            "status": "success",
+            "products": products_data,
+            "all_schemas": all_schemas, 
+            "non_product_schemas": non_product_schemas,
+            "crawler_summary": scraper_result.get('crawler_summary', {}),
+            "extraction_result": scraper_result.get('extraction_result', {}),
+            "error_aggregation": scraper_result.get('error_aggregation', {}),
+            "stats": {
+                "products_found": len(products_data),
+                "total_schemas_found": len(all_schemas),
+                "non_product_schemas_found": len(non_product_schemas)
+            }
+        }
+        
+    except Exception as e:
+        print(f"💥 SCRAPER ERROR: {str(e)}")
+        return {
+            "url": request.url,
+            "status": "error",
+            "error": str(e),
+            "products": [],
+            "stats": {"products_found": 0, "total_schemas_found": 0}
+        }
+
 @app.options("/scrape-and-analyze")
 async def scrape_options():
     """Handle CORS preflight for scrape-and-analyze endpoint"""
     print("🔧 OPTIONS request received for /scrape-and-analyze")
+    return {"message": "OK"}
+
+@app.options("/scrape-only")
+async def scrape_only_options():
+    """Handle CORS preflight for scrape-only endpoint"""
+    print("🔧 OPTIONS request received for /scrape-only")
     return {"message": "OK"}
 
 @app.middleware("http")
