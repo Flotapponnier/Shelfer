@@ -11,7 +11,7 @@ from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
 
-async def scrape_product_context(url: str, headless: bool = True, delay: float = 1.0) -> Dict[str, Any]:
+async def scrapeProductContext(url: str, headless: bool = True, delay: float = 1.0) -> Dict[str, Any]:
     """
     Scrape a product page and return its image URLs based on URL slug matching.
     """
@@ -90,3 +90,8 @@ async def scrape_product_context(url: str, headless: bool = True, delay: float =
             'images': imgs,
             'schema.org': schema_images
         }
+
+# Backward compatibility wrapper
+async def scrape_product_context(url: str, headless: bool = True, delay: float = 1.0) -> Dict[str, Any]:
+    """Backward compatibility wrapper for scrapeProductContext"""
+    return await scrapeProductContext(url, headless, delay)
