@@ -250,7 +250,8 @@ input_data = {
 
 result = Enricher.enrich(input_data)
 print(result)
-print("Enriched product data:", result.data)
+print("Enriched product data:", result.enriched_json_ld_schema)
+print("Original product data:", result.original_json_ld_schema)
 print("Not extracted properties:", result.not_extracted_properties)
 print("Finished:", result.finished)
 ```

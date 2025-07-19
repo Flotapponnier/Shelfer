@@ -25,7 +25,8 @@ class Enricher:
     @staticmethod
     def enrich(input_data: dict) -> EnrichedProduct:
         # input_data: { 'json_ld_schema': {...}, 'html_contexts': { prop: {relevant_html_product_context: ...} } }
-        base_schema = dict(input_data.get('json_ld_schema', {}))
+        original_schema = dict(input_data.get('json_ld_schema', {}))
+        base_schema = dict(original_schema)  # copy for enrichment
         html_contexts = input_data.get('html_contexts', {})
         not_extracted = []
         for prop, ctx in html_contexts.items():
@@ -46,4 +47,8 @@ class Enricher:
                 not_extracted.append(prop)
             base_schema[prop] = value
         base_schema.setdefault("enriched", True)
-        return EnrichedProduct(data=base_schema, not_extracted_properties=not_extracted)
+        return EnrichedProduct(
+            enriched_json_ld_schema=base_schema,
+            original_json_ld_schema=original_schema,
+            not_extracted_properties=not_extracted
+        )
