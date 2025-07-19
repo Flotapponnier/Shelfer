@@ -335,15 +335,21 @@ async def scrape_main_product(request: URLRequest):
     print(f"\n🎯 MAIN PRODUCT MODE: Analyzing {request.url}")
     
     try:
-        # Import the focused main product scraper
-        from scraper.main import scrape_main_product
+        # Import the focused main product scraper and context helper
+        from scraper.main import scrape_main_product as _scraper_main_product
+        from scraper.utils.product_context import scrape_product_context as _scrape_product_context
         
         print(f"🔍 Starting focused main product extraction for: {request.url}")
-        result = await scrape_main_product(
+        # Step 1: extract main product data (schema & analysis)
+        result = await _scraper_main_product(
             domain_url=request.url,
             headless=True,
             delay=1.0
         )
+        # Step 2: extract image URLs and HTML context by slug-based logic
+        context_data = await _scrape_product_context(request.url)
+        images = context_data.get('images', {})
+        html_context = context_data.get('relevantHtmlProductContext', '')
         
         main_product = result.get('main_product')
         all_products = result.get('all_products_found', [])
@@ -353,8 +359,17 @@ async def scrape_main_product(request: URLRequest):
         print(f"   📦 Total products found: {len(all_products)}")
         print(f"   🎯 Main product detected: {main_product is not None}")
         print(f"   📊 Confidence: {analysis.get('main_product_confidence', 'unknown')}")
-        
-        # Return focused main product data
+        # Show extracted images and context (from product_context)
+        print(f"[API] scrape-main-product urlMainimage: {images.get('urlMainimage')}")
+        print(f"[API] scrape-main-product otherMainImages: {images.get('otherMainImages')}")
+        preview = html_context if len(html_context) < 200 else html_context[:200] + '...'
+        print(f"[API] scrape-main-product relevantHtmlProductContext: {preview}")
+        print(f"[API] scrape-main-product urlMainimage: {images.get('urlMainimage')}")
+        print(f"[API] scrape-main-product otherMainImages: {images.get('otherMainImages')}")
+        # HTML context preview
+        preview = html_context if len(html_context) < 200 else html_context[:200] + '...'
+        print(f"[API] scrape-main-product relevantHtmlProductContext: {preview}")
+        # Return focused main product data including images and context
         return {
             "url": request.url,
             "status": "success",
@@ -362,6 +377,8 @@ async def scrape_main_product(request: URLRequest):
             "products_analyzed": len(all_products),
             "all_products_found": all_products,
             "analysis": analysis,
+            "images": images,
+            "relevantHtmlProductContext": html_context,
             "detection_summary": {
                 "main_product_found": main_product is not None,
                 "confidence_level": analysis.get('main_product_confidence', 'unknown'),
@@ -380,6 +397,25 @@ async def scrape_main_product(request: URLRequest):
             "products_analyzed": 0,
             "analysis": {"error": str(e)}
         }
+    
+@app.post("/scrape-product-context")
+async def scrape_product_context_endpoint(request: URLRequest):
+    """Scraper endpoint: returns only HTML context and image URLs for a product page"""
+    print(f"\n🔍 SCRAPING PRODUCT CONTEXT: {request.url}")
+    try:
+        from scraper.utils.product_context import scrape_product_context
+        result = await scrape_product_context(request.url)
+        # Log result for backend visibility
+        images = result.get('images', {})
+        print(f"[API] scrape-product-context images.urlMainimage: {images.get('urlMainimage')}")
+        print(f"[API] scrape-product-context images.otherMainImages: {images.get('otherMainImages')}")
+        html_ctx = result.get('relevantHtmlProductContext', '')
+        html_preview = html_ctx if len(html_ctx) < 200 else html_ctx[:200] + '...'
+        print(f"[API] scrape-product-context relevantHtmlProductContext: {html_preview}")
+        return result
+    except Exception as e:
+        print(f"💥 PRODUCT CONTEXT SCRAPE ERROR: {e}")
+        raise HTTPException(status_code=500, detail=f"Error scraping product context: {e}")
 
 @app.options("/scrape-and-analyze")
 async def scrape_options():
