@@ -42,7 +42,7 @@ kill-backend-port:
 
 # Run FastAPI backend server, killing any process on the port first
 backend-run: kill-backend-port
-	cd backend && uvicorn main:app --reload --port $(PORT)
+	cd backend && uv run uvicorn app:app --reload --host 0.0.0.0 --port $(PORT)
 
 # Install frontend Node.js dependencies
 frontend-install:
