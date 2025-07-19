@@ -329,6 +329,58 @@ async def scrape_only(request: URLRequest):
             "stats": {"products_found": 0, "total_schemas_found": 0}
         }
 
+@app.post("/scrape-main-product")
+async def scrape_main_product(request: URLRequest):
+    """Smart endpoint that focuses on extracting the main product only, filtering out suggestions"""
+    print(f"\n🎯 MAIN PRODUCT MODE: Analyzing {request.url}")
+    
+    try:
+        # Import the focused main product scraper
+        from scraper.main import scrape_main_product
+        
+        print(f"🔍 Starting focused main product extraction for: {request.url}")
+        result = await scrape_main_product(
+            domain_url=request.url,
+            headless=True,
+            delay=1.0
+        )
+        
+        main_product = result.get('main_product')
+        all_products = result.get('all_products_found', [])
+        analysis = result.get('analysis', {})
+        
+        print(f"🎯 MAIN PRODUCT ANALYSIS:")
+        print(f"   📦 Total products found: {len(all_products)}")
+        print(f"   🎯 Main product detected: {main_product is not None}")
+        print(f"   📊 Confidence: {analysis.get('main_product_confidence', 'unknown')}")
+        
+        # Return focused main product data
+        return {
+            "url": request.url,
+            "status": "success",
+            "main_product": main_product,
+            "products_analyzed": len(all_products),
+            "all_products_found": all_products,
+            "analysis": analysis,
+            "detection_summary": {
+                "main_product_found": main_product is not None,
+                "confidence_level": analysis.get('main_product_confidence', 'unknown'),
+                "total_products_on_page": len(all_products),
+                "algorithm_used": "main_product_detector_v1"
+            }
+        }
+        
+    except Exception as e:
+        print(f"💥 MAIN PRODUCT EXTRACTION ERROR: {str(e)}")
+        return {
+            "url": request.url,
+            "status": "error",
+            "error": str(e),
+            "main_product": None,
+            "products_analyzed": 0,
+            "analysis": {"error": str(e)}
+        }
+
 @app.options("/scrape-and-analyze")
 async def scrape_options():
     """Handle CORS preflight for scrape-and-analyze endpoint"""
@@ -339,6 +391,12 @@ async def scrape_options():
 async def scrape_only_options():
     """Handle CORS preflight for scrape-only endpoint"""
     print("🔧 OPTIONS request received for /scrape-only")
+    return {"message": "OK"}
+
+@app.options("/scrape-main-product")
+async def scrape_main_product_options():
+    """Handle CORS preflight for scrape-main-product endpoint"""
+    print("🔧 OPTIONS request received for /scrape-main-product")
     return {"message": "OK"}
 
 @app.middleware("http")
