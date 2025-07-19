@@ -34,10 +34,11 @@ npm run dev
 
 Visit http://localhost:3000 to use the application.
 
-## Features
+  Frontend: Next.js app with a clean SEO analyzer interface
+  Backend: FastAPI server with /analyze endpoint
+  Structure: Organized folders with proper architecture
 
-- URL-based SEO analysis
-- Real-time scoring
-- Responsive web interface
-- RESTful API backend
-- CORS-enabled for development
+  To run:
+  Backend: cd backend && pip install -r requirements.txt && uvicorn main:app --reload --port
+  8000
+  Frontend: cd frontend && npm install && npm run dev
