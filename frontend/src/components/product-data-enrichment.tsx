@@ -18,7 +18,8 @@ import { downloadJsonFile } from "../../utils/file-download";
 import type { JsonValue } from "../../types/json";
 import { Product } from "schema-dts";
 import { Download } from "lucide-react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, CheckCircle } from "lucide-react";
+import { approveAllFields } from "../../utils/validation";
 
 export default function ProductDataEnrichment({ data }: { data: Product }) {
 	const { enrichedProduct, updateFieldValue, diffResult, setEnrichedProduct } = useProductData(
@@ -30,6 +31,7 @@ export default function ProductDataEnrichment({ data }: { data: Product }) {
 	const { editingState, startEditing, stopEditing, isEditing } = useEditing();
 
 	const pendingFields = getAllPendingFields(diffResult, validationStates);
+	console.log('Pending fields:', pendingFields);
 	const isDownloadEnabled = pendingFields.length === 0;
 
 	const handleDownload = () => {
@@ -51,6 +53,11 @@ export default function ProductDataEnrichment({ data }: { data: Product }) {
 			// You might want to reset the validation state here
 			// For now, we'll let the diff system handle it
 		}
+	};
+
+	// Approve all pending fields
+	const handleApproveAll = () => {
+		approveAllFields(enrichedProduct, [], handleValidation);
 	};
 
 	// Remove field handler
@@ -95,16 +102,27 @@ export default function ProductDataEnrichment({ data }: { data: Product }) {
 									(Click values to edit • Hover to approve/decline)
 								</span>
 							</CardTitle>
-							<button
-								onClick={() => {
-									resetValidation();
-									setEnrichedProduct(JSON.parse(JSON.stringify(initialEnrichedProduct)));
-								}}
-								className="px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 bg-gray-200 text-gray-700 hover:bg-gray-300 hover:shadow-lg transform hover:scale-105"
-							>
-								<RefreshCw className="w-4 h-4" />
-								Reset Validation
-							</button>
+							<div className="flex gap-2">
+								{pendingFields.length > 0 && (
+									<button
+										onClick={handleApproveAll}
+										className="px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 bg-green-500 text-white hover:bg-green-600 hover:shadow-lg transform hover:scale-105"
+									>
+										<CheckCircle className="w-4 h-4" />
+										Approve All Changes
+									</button>
+								)}
+								<button
+									onClick={() => {
+										resetValidation();
+										setEnrichedProduct(JSON.parse(JSON.stringify(initialEnrichedProduct)));
+									}}
+									className="px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 bg-gray-200 text-gray-700 hover:bg-gray-300 hover:shadow-lg transform hover:scale-105"
+								>
+									<RefreshCw className="w-4 h-4" />
+									Reset Validation
+								</button>
+							</div>
 						</CardHeader>
 						<CardContent>
 							<div className="bg-gray-100 rounded-lg p-6 border-2 border-dashed border-gray-300">
