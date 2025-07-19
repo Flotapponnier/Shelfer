@@ -337,7 +337,7 @@ async def scrape_main_product(request: URLRequest):
     try:
         # Import the focused main product scraper and context helper
         from scraper.main import scrape_main_product as _scraper_main_product
-        from scraper.utils.product_context import scrape_product_context as _scrape_product_context
+        from scraper.utils.product_context import scrapeProductContext as _scrape_product_context
         
         print(f"🔍 Starting focused main product extraction for: {request.url}")
         # Step 1: extract main product data (schema & analysis)
@@ -403,8 +403,8 @@ async def scrape_product_context_endpoint(request: URLRequest):
     """Scraper endpoint: returns only HTML context and image URLs for a product page"""
     print(f"\n🔍 SCRAPING PRODUCT CONTEXT: {request.url}")
     try:
-        from scraper.utils.product_context import scrape_product_context
-        result = await scrape_product_context(request.url)
+        from scraper.utils.product_context import scrapeProductContext
+        result = await scrapeProductContext(request.url)
         # Log result for backend visibility
         images = result.get('images', {})
         print(f"[API] scrape-product-context images.urlMainimage: {images.get('urlMainimage')}")
