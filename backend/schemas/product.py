@@ -37,8 +37,8 @@ class SchemaOrgProduct(BaseModel):
 
 # New models for the extractor service
 class ProductImages(BaseModel):
-    url_main_image: str
-    other_main_images: List[str]
+    url_main_image: Optional[str] = None
+    other_main_images: List[str] = []
 
 class ScraperInput(BaseModel):
     product_html: str

@@ -93,7 +93,7 @@ class ProductImageExtractor:
                                 const parts = ss.split(',');
                                 let bestUrl = null, bestW = 0;
                                 parts.forEach(p => {
-                                    const [url, wDesc] = p.trim().split(/\s+/);
+                                    const [url, wDesc] = p.trim().split(' ');
                                     const w = parseInt((wDesc||'').replace('w',''), 10);
                                     if (!isNaN(w) && w > bestW) { bestW = w; bestUrl = url; }
                                 });

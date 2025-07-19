@@ -132,6 +132,11 @@ class ExtractorService:
             url_main_image = images_data.get("url_main_image", "")
             other_images = images_data.get("other_images", [])
             
+            # Debug: Log what we actually received
+            logger.debug(f"🔍 ExtractorService received data keys: {list(scraped_data.keys())}")
+            logger.debug(f"🔍 ExtractorService product_html length: {len(product_html)} chars")
+            logger.debug(f"🔍 ExtractorService product_html preview: {product_html[:200] if product_html else 'EMPTY!'}")
+            
             # Handle json_ld_schema: convert empty list to None, ensure it's a dict or None
             raw_json_ld = scraped_data.get("json_ld_schema")
             if isinstance(raw_json_ld, list) and len(raw_json_ld) == 0:
