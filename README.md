@@ -46,15 +46,39 @@
 
 ## Quick Start
 
-### Backend (FastAPI)
+### Prerequisites
+
+Make sure you have the following installed:
+- [uv](https://docs.astral.sh/uv/) (Python package manager)
+- [Node.js](https://nodejs.org/) (for frontend)
+- [Make](https://www.gnu.org/software/make/) (for build automation)
+
+### Option 1: Using Makefile (Recommended)
+
+The easiest way to get started is using the provided Makefile:
+
+```bash
+# Install all dependencies (backend & frontend)
+make init
+
+# Run the backend server (FastAPI on port 8000)
+make backend-run
+
+# In a new terminal, run the frontend (Next.js on port 3000)
+make frontend-run
+```
+
+### Option 2: Manual Setup
+
+#### Backend (FastAPI)
 
 ```bash
 cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
+uv sync  # Install Python dependencies using uv
+uv run uvicorn app:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Frontend (Next.js)
+#### Frontend (Next.js)
 
 ```bash
 cd frontend
@@ -62,13 +86,20 @@ npm install
 npm run dev
 ```
 
-Visit http://localhost:3000 to use the application.
+### Access the Application
 
-Frontend: Next.js app with a clean SEO analyzer interface
-Backend: FastAPI server with /analyze endpoint
-Structure: Organized folders with proper architecture
+- **Frontend:** http://localhost:3000
+- **Backend API:** http://localhost:8000
+- **API Documentation:** http://localhost:8000/docs
 
-To run:
-Backend: cd backend && pip install -r requirements.txt && uvicorn main:app --reload --port
-8000
-Frontend: cd frontend && npm install && npm run dev
+### Available Make Commands
+
+```bash
+make help              # Show all available commands
+make backend-install   # Install backend dependencies
+make backend-run       # Run backend server
+make frontend-install  # Install frontend dependencies  
+make frontend-run      # Run frontend development server
+make kill-backend-port # Kill process on backend port
+make init              # Install all dependencies
+```
