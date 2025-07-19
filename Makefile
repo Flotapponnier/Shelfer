@@ -14,16 +14,16 @@
 .PHONY: help backend-install backend-run frontend-install frontend-run kill-backend-port init
 
 # Default backend port (change if needed)
-PORT ?= 8000
+BACKEND_PORT ?= 8000
 
 # Show all available commands and what they do
 help:
 	@echo "Available commands:"
 	@echo "  make backend-install    # Install backend Python dependencies using uv (not pip)"
-	@echo "  make backend-run        # Kill process on port $(PORT) if needed, then run FastAPI backend server on port $(PORT) using uvicorn (dependencies managed by uv)"
+	@echo "  make backend-run        # Kill process on port $(BACKEND_PORT) if needed, then run FastAPI backend server on port $(PORT) using uvicorn (dependencies managed by uv)"
 	@echo "  make frontend-install   # Install frontend Node.js dependencies"
 	@echo "  make frontend-run       # Run Next.js frontend development server on port 3000"
-	@echo "  make kill-backend-port  # Kill process running on port $(PORT) (macOS only)"
+	@echo "  make kill-backend-port  # Kill process running on port $(BACKEND_PORT) (macOS only)"
 	@echo "  make init               # Install all dependencies (backend with uv & frontend)"
 
 # Install backend Python dependencies using uv
@@ -32,17 +32,17 @@ backend-install:
 
 # Kill any process running on the backend port (default: $(PORT))
 kill-backend-port:
-	@PID=$$(lsof -ti tcp:$(PORT)); \
+	@PID=$$(lsof -ti tcp:$(BACKEND_PORT)); \
 	if [ -n "$$PID" ]; then \
-		echo "Killing process on port $(PORT) (PID: $$PID)"; \
+		echo "Killing process on port $(BACKEND_PORT) (PID: $$PID)"; \
 		kill -9 $$PID; \
 	else \
-		echo "No process running on port $(PORT)"; \
+		echo "No process running on port $(BACKEND_PORT)"; \
 	fi
 
 # Run FastAPI backend server, killing any process on the port first
 backend-run: kill-backend-port
-	cd backend && uv run uvicorn app:app --reload --host 0.0.0.0 --port $(PORT)
+	cd backend && uvicorn main:app --reload --port $(BACKEND_PORT)
 
 # Install frontend Node.js dependencies
 frontend-install:
