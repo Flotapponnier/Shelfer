@@ -17,9 +17,11 @@ import {
 import { downloadJsonFile } from "../../utils/file-download";
 import type { JsonValue } from "../../types/json";
 import { Product } from "schema-dts";
+import { Download } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
 export default function ProductDataEnrichment({ data }: { data: Product }) {
-	const { enrichedProduct, updateFieldValue, diffResult } = useProductData(
+	const { enrichedProduct, updateFieldValue, diffResult, setEnrichedProduct } = useProductData(
 		originalProduct,
 		initialEnrichedProduct,
 	);
@@ -51,6 +53,27 @@ export default function ProductDataEnrichment({ data }: { data: Product }) {
 		}
 	};
 
+	// Remove field handler
+	const handleRemoveField = (fieldPath: string) => {
+		const pathArray = fieldPath.split(".");
+		// Always deep clone to avoid mutating the original object
+		const newData = JSON.parse(JSON.stringify(enrichedProduct));
+		let current: Record<string, unknown> = newData;
+		for (let i = 0; i < pathArray.length - 1; i++) {
+			if (!current[pathArray[i]]) return; // Path does not exist
+			current = current[pathArray[i]] as Record<string, unknown>;
+		}
+		const finalKey = pathArray[pathArray.length - 1];
+		if (Array.isArray(current)) {
+			const idx = parseInt(finalKey.replace(/\[|\]/g, ""), 10);
+			if (!isNaN(idx)) (current as unknown as unknown[]).splice(idx, 1);
+		} else {
+			delete current[finalKey];
+		}
+		// Always set a new object at the root to avoid mutating the original
+		setEnrichedProduct(newData);
+	};
+
 	return (
 		<div className="min-h-screen">
 			<div className="mx-auto w-full">
@@ -64,7 +87,7 @@ export default function ProductDataEnrichment({ data }: { data: Product }) {
 				{/* Single Panel Layout - Only Enriched Product Data */}
 				<div className="w-full px-2 sm:px-4 md:px-8 lg:px-16 xl:px-32 2xl:px-64">
 					<Card className="h-fit">
-						<CardHeader className="pb-4">
+						<CardHeader className="pb-4 flex flex-row items-center justify-between">
 							<CardTitle className="text-xl font-semibold text-gray-800 flex items-center gap-2">
 								<div className="w-3 h-3 bg-green-500 rounded-full"></div>
 								Enriched Product Data
@@ -72,6 +95,16 @@ export default function ProductDataEnrichment({ data }: { data: Product }) {
 									(Click values to edit • Hover to approve/decline)
 								</span>
 							</CardTitle>
+							<button
+								onClick={() => {
+									resetValidation();
+									setEnrichedProduct(JSON.parse(JSON.stringify(initialEnrichedProduct)));
+								}}
+								className="px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 bg-gray-200 text-gray-700 hover:bg-gray-300 hover:shadow-lg transform hover:scale-105"
+							>
+								<RefreshCw className="w-4 h-4" />
+								Reset Validation
+							</button>
 						</CardHeader>
 						<CardContent>
 							<div className="bg-gray-100 rounded-lg p-6 border-2 border-dashed border-gray-300">
@@ -84,6 +117,7 @@ export default function ProductDataEnrichment({ data }: { data: Product }) {
 									onStartEditing={startEditing}
 									onStopEditing={stopEditing}
 									onUpdateValue={handleUpdateValue}
+									onRemoveField={handleRemoveField}
 								/>
 							</div>
 						</CardContent>

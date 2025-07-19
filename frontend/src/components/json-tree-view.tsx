@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { ChevronRight, ChevronDown, Check, X, Edit3 } from "lucide-react"
+import { ChevronRight, ChevronDown, Check, X, Edit3, Trash2 } from "lucide-react"
 import { DiffType, type DiffResult, getDiffTypeForPath, getOriginalValueForPath } from "../../utils/json-diff"
 import { ValidationState, type FieldValidation, type ValidationAction } from "../../types/validation"
 import EditableValue from "./editable-value"
@@ -22,6 +22,7 @@ interface JsonTreeViewProps {
   onStartEditing?: (fieldPath: string, currentValue: JsonValue) => void
   onStopEditing?: () => void
   onUpdateValue?: (fieldPath: string, newValue: JsonValue) => void
+  onRemoveField?: (fieldPath: string) => void // <-- add this
 }
 
 interface JsonNodeProps {
@@ -37,6 +38,7 @@ interface JsonNodeProps {
   onStartEditing?: (fieldPath: string, currentValue: JsonValue) => void
   onStopEditing?: () => void
   onUpdateValue?: (fieldPath: string, newValue: JsonValue) => void
+  onRemoveField?: (fieldPath: string) => void // <-- add this
 }
 
 function JsonNode({
@@ -52,6 +54,7 @@ function JsonNode({
   onStartEditing,
   onStopEditing,
   onUpdateValue,
+  onRemoveField,
 }: JsonNodeProps) {
   const [isExpanded, setIsExpanded] = useState(level < 2)
 
@@ -175,6 +178,14 @@ function JsonNode({
     })
   }
 
+  // Remove handler
+  const handleRemove = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (onRemoveField) {
+      onRemoveField(fieldPath)
+    }
+  }
+
   const shouldShowValidationControls = (): boolean => {
     return (
       validationState === ValidationState.PENDING &&
@@ -239,6 +250,52 @@ function JsonNode({
     return parentType === DiffType.NEW;
   })();
 
+  // Helper: Approve all children recursively
+  const handleApproveAll = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!onValidation) return;
+    // Recursively approve all child fields
+    const approveRecursive = (val: JsonValue, path: string[]) => {
+      if (val !== null && typeof val === 'object') {
+        if (Array.isArray(val)) {
+          val.forEach((item, idx) => approveRecursive(item, [...path, `[${idx}]`]));
+        } else {
+          Object.entries(val).forEach(([k, v]) => approveRecursive(v, [...path, k]));
+        }
+      } else {
+        onValidation({ type: 'APPROVE', fieldPath: path.join('.'), originalValue: undefined });
+      }
+    };
+    approveRecursive(value, nodePath);
+  };
+
+  // Helper: Check if all children are approved or deleted (but not empty)
+  const isAllChildrenApprovedOrDeleted = (val: JsonValue, path: string[]): boolean => {
+    if (val !== null && typeof val === 'object') {
+      if (Array.isArray(val)) {
+        if (val.length === 0) return false; // empty array: not approved
+        return val.every((item, idx) => isAllChildrenApprovedOrDeleted(item, [...path, `[${idx}]`]));
+      } else {
+        const entries = Object.entries(val);
+        if (entries.length === 0) return false; // empty object: not approved
+        return entries.every(([k, v]) => isAllChildrenApprovedOrDeleted(v, [...path, k]));
+      }
+    } else {
+      const childFieldPath = path.join(".");
+      const state = validationStates?.[childFieldPath];
+      // Only count as approved if explicitly approved
+      return state === ValidationState.APPROVED;
+    }
+  };
+
+  // --- Helper variables for rendering logic ---
+  const isFullyApproved = validationState === ValidationState.APPROVED || (isExpandable(displayValue) && validationState === ValidationState.PENDING && isAllChildrenApprovedOrDeleted(displayValue, nodePath));
+  const isFullyDeclined = validationState === ValidationState.DECLINED && !isAllChildrenApprovedOrDeleted(displayValue, nodePath);
+  const showDiffIndicator = diffResult && validationState === ValidationState.PENDING && !(isExpandable(displayValue) && isAllChildrenApprovedOrDeleted(displayValue, nodePath));
+  const showValidationIndicator = isFullyApproved || isFullyDeclined;
+  const showApproveAllControls = onRemoveField && isExpandable(displayValue) && validationState === ValidationState.PENDING && !isAllChildrenApprovedOrDeleted(displayValue, nodePath);
+  const rowOpacityClass = isFullyApproved || isFullyDeclined ? "opacity-75" : "";
+
   return (
     <div className={`font-mono text-sm ${shouldHighlightWholeBlock() ? 'bg-green-50 border-l-4 border-green-400' : ''}`}>
       <div
@@ -250,9 +307,7 @@ function JsonNode({
             : (!isParentNewBlock && !shouldHighlightWholeBlock())
               ? getDiffBackgroundClass(diffType, validationState)
               : ''
-        } ${
-          validationState !== ValidationState.PENDING ? "opacity-75" : ""
-        }`}
+        } ${rowOpacityClass}`}
         onClick={handleToggle}
         style={{ paddingLeft: `${level * 20}px` }}
       >
@@ -270,7 +325,7 @@ function JsonNode({
         </div>
 
         {/* Diff indicator */}
-        {diffResult && validationState === ValidationState.PENDING && (
+        {showDiffIndicator && (
           <div className="w-2 h-2 mr-2 rounded-full flex-shrink-0">
             {diffType === DiffType.NEW && <div className="w-full h-full bg-green-500 rounded-full"></div>}
             {diffType === DiffType.MODIFIED && <div className="w-full h-full bg-yellow-500 rounded-full"></div>}
@@ -278,12 +333,12 @@ function JsonNode({
         )}
 
         {/* Validation state indicator */}
-        {validationState !== ValidationState.PENDING && (
+        {showValidationIndicator && (
           <div className="w-2 h-2 mr-2 rounded-full flex-shrink-0">
-            {validationState === ValidationState.APPROVED && (
+            {isFullyApproved && (
               <div className="w-full h-full bg-blue-500 rounded-full"></div>
             )}
-            {validationState === ValidationState.DECLINED && (
+            {isFullyDeclined && (
               <div className="w-full h-full bg-gray-400 rounded-full"></div>
             )}
           </div>
@@ -332,22 +387,18 @@ function JsonNode({
             )}
 
             {/* Status badges */}
-            {validationState === ValidationState.PENDING && diffType === DiffType.NEW && (
+            {isExpandable(displayValue) && validationState === ValidationState.PENDING && diffType === DiffType.NEW && isAllChildrenApprovedOrDeleted(displayValue, nodePath) ? (
+              <span className="ml-2 px-2 py-1 text-xs bg-blue-200 text-blue-800 rounded-full font-medium">APPROVED</span>
+            ) : validationState === ValidationState.PENDING && diffType === DiffType.NEW ? (
               <span className="ml-2 px-2 py-1 text-xs bg-green-200 text-green-800 rounded-full font-medium">NEW</span>
-            )}
-            {validationState === ValidationState.APPROVED && (
-              <span className="ml-2 px-2 py-1 text-xs bg-blue-200 text-blue-800 rounded-full font-medium">
-                APPROVED
-              </span>
-            )}
-            {validationState === ValidationState.DECLINED && (
-              <span className="ml-2 px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded-full font-medium">
-                DECLINED
-              </span>
-            )}
+            ) : validationState === ValidationState.APPROVED ? (
+              <span className="ml-2 px-2 py-1 text-xs bg-blue-200 text-blue-800 rounded-full font-medium">APPROVED</span>
+            ) : validationState === ValidationState.DECLINED ? (
+              <span className="ml-2 px-2 py-1 text-xs bg-gray-200 text-gray-600 rounded-full font-medium">DECLINED</span>
+            ) : null}
           </div>
 
-          {/* Validation Controls */}
+          {/* Validation Controls for values */}
           {shouldShowValidationControls() && (
             <div className="flex items-center gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
@@ -363,6 +414,26 @@ function JsonNode({
                 title="Decline this change"
               >
                 <X className="w-3 h-3 text-red-600" />
+              </button>
+            </div>
+          )}
+
+          {/* Validation Controls for objects/arrays */}
+          {showApproveAllControls && (
+            <div className="flex items-center gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={handleApproveAll}
+                className="p-1 hover:bg-green-100 rounded-full transition-colors"
+                title="Approve all child fields"
+              >
+                <Check className="w-4 h-4 text-green-600" />
+              </button>
+              <button
+                onClick={handleRemove}
+                className="p-1 hover:bg-red-100 rounded-full transition-colors"
+                title="Remove this object/array"
+              >
+                <X className="w-4 h-4 text-red-500" />
               </button>
             </div>
           )}
@@ -388,6 +459,7 @@ function JsonNode({
                   onStartEditing={onStartEditing}
                   onStopEditing={onStopEditing}
                   onUpdateValue={onUpdateValue}
+                  onRemoveField={onRemoveField}
                 />
               ))
             : Object.entries(displayValue).map(([key, val], index, array) => (
@@ -405,6 +477,7 @@ function JsonNode({
                   onStartEditing={onStartEditing}
                   onStopEditing={onStopEditing}
                   onUpdateValue={onUpdateValue}
+                  onRemoveField={onRemoveField}
                 />
               ))}
           <div className="text-gray-600 font-mono text-sm" style={{ paddingLeft: `${level * 20 + 24}px` }}>
@@ -428,6 +501,7 @@ export default function JsonTreeView({
   onStartEditing,
   onStopEditing,
   onUpdateValue,
+  onRemoveField,
 }: JsonTreeViewProps) {
   if (data === null || data === undefined) {
     return <div className="text-gray-500 font-mono text-sm p-4">No data available</div>
@@ -452,6 +526,7 @@ export default function JsonTreeView({
               onStartEditing={onStartEditing}
               onStopEditing={onStopEditing}
               onUpdateValue={onUpdateValue}
+              onRemoveField={onRemoveField}
             />
           ))
         ) : (
@@ -467,6 +542,7 @@ export default function JsonTreeView({
             onStartEditing={onStartEditing}
             onStopEditing={onStopEditing}
             onUpdateValue={onUpdateValue}
+            onRemoveField={onRemoveField}
           />
         )}
       </div>
