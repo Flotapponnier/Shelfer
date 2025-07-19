@@ -99,7 +99,86 @@ make init              # Install all dependencies
 │   │       └── page.tsx   # Main SEO analyzer interface
 │   └── package.json
 ├── backend/           # FastAPI Python backend
+│   ├── services/      # Core business logic
+│   │   └── html_extractor.py  # HTML context extraction service
+│   ├── schemas/       # Pydantic data models
+│   ├── prompts/       # AI prompt templates
 │   ├── main.py        # API endpoints
 │   └── requirements.txt
 └── README.md
 ```
+
+## HTML Extractor Service
+
+The **HTML Extractor Service** is a core component that processes scraped product data and identifies relevant HTML contexts for each schema.org property using OpenAI's GPT models.
+
+### Usage
+
+```python
+from services.html_extractor import HtmlExtractorService
+from schemas.product import ScraperInput, ProductImages
+
+# Initialize the service
+extractor = HtmlExtractorService()
+
+# Prepare input data from your scraper
+scraper_input = ScraperInput(
+    product_html="<div class='product'>...</div>",  # Cleaned HTML from scraper
+    images=ProductImages(
+        url_main_image="https://example.com/main.jpg",
+        other_main_images=["https://example.com/alt1.jpg"]
+    ),
+    json_ld_schema={"@type": "Product", "name": "..."}  # Optional existing schema
+)
+
+# Extract HTML contexts for all 23 target properties
+result = extractor.extract_html_contexts(scraper_input)
+
+# Output ready for enricher
+print(f"Processed {len(result.html_contexts)} properties")
+# result.html_contexts contains relevant HTML for each property
+# result.json_ld_schema contains forwarded schema data
+```
+
+### Supported Properties
+
+The extractor identifies HTML contexts for 23 schema.org Product properties:
+
+**Core Properties:** `offers.price`, `offers.priceCurrency`, `offers.availability`, `description`, `image`, `brand`, `offers.itemCondition`
+
+**Product Details:** `color`, `material`, `size`, `category`, `keywords`, `manufacturer`, `audience`, `additionalType`
+
+**Reviews & Ratings:** `aggregateRating`, `review`, `positiveNotes`, `negativeNotes`
+
+**Business Info:** `hasMerchantReturnPolicy`, `nsn`, `countryOfLastProcessing`, `isFamilyFriendly`
+
+### Input/Output Format
+
+**Input Format:**
+```json
+{
+  "product_html": "<html>cleaned product page content</html>",
+  "images": {
+    "url_main_image": "https://example.com/main.jpg",
+    "other_main_images": ["https://example.com/alt1.jpg"]
+  },
+  "json_ld_schema": {...}
+}
+```
+
+**Output Format:**
+```json
+{
+  "json_ld_schema": {...},
+  "html_contexts": {
+    "offers.price": {
+      "relevant_html_product_context": "<span class='price'>$29.99</span>"
+    },
+    "description": {
+      "relevant_html_product_context": "<div class='desc'>Product details...</div>"
+    }
+  }
+}
+```
+
+The output is designed to be directly consumed by the enricher component in the next stage of the pipeline.
