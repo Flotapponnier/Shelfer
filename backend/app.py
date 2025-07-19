@@ -213,12 +213,36 @@ async def enrich_product_schema(request: URLRequest):
         # Call helper function to get product context
         productContext = await get_product_context(request.url)
         
-        # Log the results
+        # Log the results with enhanced HTML context analysis
         print(f"[API] enrich-product-schema urlMainimage: {productContext['images']['urlMainimage']}")
         print(f"[API] enrich-product-schema otherMainImages: {productContext['images']['otherMainImages']}")
-        preview = productContext['relevantHtmlProductContext']
-        preview = preview if len(preview) < 200 else preview[:200] + '...'
-        print(f"[API] enrich-product-schema relevantHtmlProductContext: {preview}")
+        
+        # Enhanced HTML context logging
+        html_context = productContext['relevantHtmlProductContext']
+        print(f"[API] 🔍 HTML CONTEXT ANALYSIS:")
+        print(f"    📏 Total length: {len(html_context)} characters")
+        
+        if html_context:
+            # Count different types of content
+            import re
+            title_count = len(re.findall(r'<h[1-6][^>]*>', html_context, re.IGNORECASE))
+            price_count = len(re.findall(r'(price|cost|currency|\$|€|£)', html_context, re.IGNORECASE))
+            desc_count = len(re.findall(r'(description|detail|specification|feature)', html_context, re.IGNORECASE))
+            brand_count = len(re.findall(r'(brand|manufacturer|maker)', html_context, re.IGNORECASE))
+            
+            print(f"    🏷️  Title elements: {title_count}")
+            print(f"    💰 Price indicators: {price_count}")
+            print(f"    📝 Description indicators: {desc_count}")
+            print(f"    🏭 Brand indicators: {brand_count}")
+            
+            # Show the FULL HTML context for debugging
+            print(f"    📋 FULL HTML CONTEXT:")
+            print(f"{'='*80}")
+            print(html_context)
+            print(f"{'='*80}")
+        else:
+            print(f"    ⚠️  No HTML context extracted!")
+        print(f"[API] ===============================================")
         
         # TODO: Add enrichment pipeline here - for now return scraper result
         # This is where HTML extractor and enricher would be called
