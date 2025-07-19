@@ -34,3 +34,20 @@ class SchemaOrgProduct(BaseModel):
     offers: Optional[Dict[str, Any]] = None
     image: Optional[str] = None
     additional_data: Optional[Dict[str, Any]] = None
+
+# New models for the extractor service
+class ProductImages(BaseModel):
+    url_main_image: str
+    other_main_images: List[str]
+
+class ScraperInput(BaseModel):
+    product_html: str
+    images: ProductImages
+    json_ld_schema: Optional[Dict[str, Any]] = None
+
+class HtmlContext(BaseModel):
+    relevant_html_product_context: str
+
+class ExtractorOutput(BaseModel):
+    json_ld_schema: Optional[Dict[str, Any]] = None
+    html_contexts: Dict[str, HtmlContext]
