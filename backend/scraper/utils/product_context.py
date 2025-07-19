@@ -6,6 +6,7 @@ returning HTML snippet and image URLs in a simplified format.
 """
 import logging
 import json
+from .json_ld_extraction_utils import JSONLDExtractor
 from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
@@ -27,9 +28,9 @@ async def scrape_product_context(url: str, headless: bool = True, delay: float =
         # Extract schema.org Product images from JSON-LD as fallback
         schema_images = []
         try:
-            script_handles = await page.query_selector_all("script[type='application/ld+json']")
-            for script in script_handles:
-                text = await script.text_content()
+            jsonld_extractor = JSONLDExtractor(delay=delay)
+            jsonld_scripts = await jsonld_extractor.extract_jsonld_from_page(page)
+            for text in jsonld_scripts:
                 if not text:
                     continue
                 try:
@@ -81,8 +82,8 @@ async def scrape_product_context(url: str, headless: bool = True, delay: float =
         imgs = data.get('images', {})
         html_ctx = data.get('relevantHtmlProductContext', '')
         # Log for backend visibility
-        print(f"[ProductContext] urlMainimage: {imgs.get('urlMainimage')}")
-        print(f"[ProductContext] otherMainImages: {imgs.get('otherMainImages')}")
+        logger.debug(f"ProductContext urlMainimage: {imgs.get('urlMainimage')}")
+        logger.debug(f"ProductContext otherMainImages: {imgs.get('otherMainImages')}")
         # Return scraped product context
         return {
             'relevantHtmlProductContext': html_ctx,
