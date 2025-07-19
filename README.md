@@ -52,13 +52,16 @@ npm run dev
 ### Available Make Commands
 
 ```bash
-make help              # Show all available commands
-make backend-install   # Install backend dependencies
-make backend-run       # Run backend server
-make frontend-install  # Install frontend dependencies
-make frontend-run      # Run frontend development server
-make kill-backend-port # Kill process on backend port
-make init              # Install all dependencies
+make help                     # Show all available commands
+make backend-install          # Install backend dependencies
+make backend-run              # Run backend server
+make frontend-install         # Install frontend dependencies
+make frontend-run             # Run frontend development server
+make kill-backend-port        # Kill process on backend port
+make init                     # Install all dependencies
+make test-html-extractor      # Run HTML extractor service test
+make test-image-extractor     # Run image extractor service test
+make test-all                 # Run all extractor service tests
 ```
 
 ## Product Brief
@@ -101,9 +104,14 @@ make init              # Install all dependencies
 │   └── package.json
 ├── backend/           # FastAPI Python backend
 │   ├── services/      # Core business logic
-│   │   └── html_extractor.py  # HTML context extraction service
+│   │   ├── html_extractor.py   # HTML context extraction service
+│   │   └── image_extractor.py  # Image analysis extraction service
 │   ├── schemas/       # Pydantic data models
 │   ├── prompts/       # AI prompt templates
+│   ├── tests/         # Test scripts and documentation
+│   │   ├── README.md               # Test instructions and results
+│   │   ├── test_image_extractor.py # Image extractor service test
+│   │   └── test_html_extractor.py  # HTML extractor service test
 │   ├── main.py        # API endpoints
 │   └── requirements.txt
 └── README.md
@@ -187,6 +195,132 @@ The extractor identifies HTML contexts for 22 schema.org Product properties from
 ```
 
 The output is designed to be directly consumed by the enricher component in the next stage of the pipeline.
+
+## Testing the Services
+
+Both extractor services include comprehensive test suites to validate functionality and demonstrate usage.
+
+### Quick Testing with Makefile
+
+```bash
+# Test HTML extraction (22 properties from product HTML)
+make test-html-extractor
+
+# Test image extraction (10 properties from product images)
+make test-image-extractor
+
+# Run both tests
+make test-all
+```
+
+### Manual Testing
+
+```bash
+# Test HTML extractor
+cd backend
+uv run python tests/test_html_extractor.py
+
+# Test image extractor
+cd backend
+uv run python tests/test_image_extractor.py
+```
+
+### Test Results Overview
+
+- **HTML Extractor**: 100% success rate (22/22 properties) extracting from rich product HTML
+- **Image Extractor**: 100% success rate (10/10 properties) analyzing product images with GPT-4o vision
+- **Combined Coverage**: 32 total schema.org properties across text and visual analysis
+
+For detailed test documentation, results, and troubleshooting, see [`backend/tests/README.md`](backend/tests/README.md).
+
+## Image Extractor Service
+
+The **Image Extractor Service** complements the HTML extractor by analyzing product images using GPT-4o vision model to extract visual schema.org properties that cannot be determined from HTML alone.
+
+### Usage
+
+```python
+from services.image_extractor import ImageExtractorService
+from schemas.product import ScraperInput, ProductImages
+
+# Initialize the service
+image_extractor = ImageExtractorService()
+
+# Prepare input data with product images
+scraper_input = ScraperInput(
+    product_html="<div>...</div>",  # Not used by image extractor
+    images=ProductImages(
+        url_main_image="https://example.com/product-main.jpg",
+        other_main_images=["https://example.com/variant1.jpg", "https://example.com/detail.jpg"]
+    ),
+    json_ld_schema={"@type": "Product", "name": "Product Name"}
+)
+
+# Extract visual properties from images
+result = image_extractor.extract_image_contexts(
+    scraper_input=scraper_input,
+    product_name="Product Name",
+    product_url="https://example.com/product"
+)
+
+# Output compatible with enricher
+print(f"Processed {len(result)} visual properties")
+# result is Dict[str, HtmlContext] with visual data extracted from images
+```
+
+### Supported Visual Properties
+
+The image extractor identifies 10 schema.org properties that can be determined from product images:
+
+**Visual Characteristics:** `color`, `material`, `size`
+
+**Product Information:** `image`, `brand`, `category`, `additionalType`
+
+**Quality Assessment:** `offers.itemCondition`, `positiveNotes`, `negativeNotes`
+
+### Features
+
+- **GPT-4o Vision Integration**: Uses OpenAI's most advanced vision model for accurate analysis
+- **Multi-Image Processing**: Analyzes main image first, then processes additional images for incomplete properties
+- **Safety Handling**: Detects and handles safety refusals with fallback prompts
+- **Error Resilience**: Gracefully handles invalid URLs, network issues, and processing errors
+- **Format Support**: Supports common image formats (JPG, PNG, GIF, BMP, WebP)
+
+### Input/Output Format
+
+**Input**: Same `ScraperInput` format as HTML extractor, but focuses on the `images` field
+
+**Output**: `Dict[str, HtmlContext]` where each property contains extracted visual information
+
+```json
+{
+  "color": {
+    "relevant_html_product_context": "Red with black accents"
+  },
+  "material": {
+    "relevant_html_product_context": "Premium leather with metal hardware"
+  },
+  "brand": {
+    "relevant_html_product_context": "Nike logo visible on product"
+  }
+}
+```
+
+### Integration with HTML Extractor
+
+Both services can be used together to provide comprehensive property extraction:
+
+```python
+from services.html_extractor import HtmlExtractorService
+from services.image_extractor import ImageExtractorService
+
+# Extract from both HTML and images
+html_contexts = html_extractor.extract_html_contexts(scraper_input)
+image_contexts = image_extractor.extract_image_contexts(scraper_input, product_name, product_url)
+
+# Combine results (32 total properties: 22 from HTML + 10 from images)
+all_contexts = {**html_contexts.html_contexts, **image_contexts}
+```
 
 ## Enrichment Service
 
