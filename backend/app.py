@@ -187,31 +187,60 @@ async def validate_schema(request: SchemaValidationRequest):
 
 @app.post("/scrape-and-analyze")
 async def scrape_and_analyze(request: URLRequest):
-    """Complete workflow: URL → scrapeProductContext → Analysis Ready"""
+    """Complete workflow: URL → scrapeProductContext → Analysis Ready (same as Main Product)"""
     print(f"\n🔄 RECEIVED SCRAPE REQUEST: {request.url}")
     
     try:
-        # Step 1: Use the new scrapeProductContext function
+        # Use the same logic as scrape-main-product endpoint
         print(f"🌐 Step 1: Extracting product context from {request.url}...")
         
-        # Import scraper function
-        from scraper.utils.product_context import scrapeProductContext
+        # Import the focused main product scraper and context helper
+        from scraper.main import scrape_main_product as _scraper_main_product
+        from scraper.utils.product_context import scrapeProductContext as _scrape_product_context
         
-        # Call the scrapeProductContext function
-        product_context = await scrapeProductContext(request.url)
+        print(f"🔍 Starting focused main product extraction for: {request.url}")
+        # Step 1: extract main product data (schema & analysis)
+        result = await _scraper_main_product(
+            domain_url=request.url,
+            headless=True,
+            delay=1.0
+        )
+        # Step 2: extract image URLs and HTML context by slug-based logic
+        context_data = await _scrape_product_context(request.url)
+        images = context_data.get('images', {})
+        html_context = context_data.get('relevantHtmlProductContext', '')
         
-        print(f"✅ Product context extracted successfully!")
-        print(f"   📸 Main image: {product_context.get('images', {}).get('urlMainimage')}")
-        print(f"   🖼️  Other images: {len(product_context.get('images', {}).get('otherMainImages', []))}")
-        print(f"   📄 HTML context length: {len(product_context.get('relevantHtmlProductContext', ''))}")
-        print(f"   🔗 Schema.org data: {len(product_context.get('schema.org', [])) if product_context.get('schema.org') else 0} items")
+        main_product = result.get('main_product')
+        all_products = result.get('all_products_found', [])
+        analysis = result.get('analysis', {})
         
-        # Return the product context for frontend integration
+        print(f"🎯 MAIN PRODUCT ANALYSIS:")
+        print(f"   📦 Total products found: {len(all_products)}")
+        print(f"   🎯 Main product detected: {main_product is not None}")
+        print(f"   📊 Confidence: {analysis.get('main_product_confidence', 'unknown')}")
+        # Show extracted images and context (from product_context)
+        print(f"[API] scrape-and-analyze urlMainimage: {images.get('urlMainimage')}")
+        print(f"[API] scrape-and-analyze otherMainImages: {images.get('otherMainImages')}")
+        preview = html_context if len(html_context) < 200 else html_context[:200] + '...'
+        print(f"[API] scrape-and-analyze relevantHtmlProductContext: {preview}")
+        
+        # Return the same format as scrape-main-product for consistency
         return {
-            "status": "success",
             "url": request.url,
-            "productContext": product_context,
-            "message": "Product context extracted successfully - ready for analysis"
+            "status": "success",
+            "main_product": main_product,
+            "products_analyzed": len(all_products),
+            "all_products_found": all_products,
+            "analysis": analysis,
+            "images": images,
+            "relevantHtmlProductContext": html_context,
+            "productContext": context_data,  # Include the full context for analysis
+            "detection_summary": {
+                "main_product_found": main_product is not None,
+                "confidence_level": analysis.get('main_product_confidence', 'unknown'),
+                "total_products_on_page": len(all_products),
+                "algorithm_used": "main_product_detector_v1"
+            }
         }
         
     except Exception as e:
@@ -338,25 +367,6 @@ async def cors_handler(request, call_next):
     
     response = await call_next(request)
     return response
-
-@app.post("/scrape-product-context")
-async def scrape_product_context_endpoint(request: URLRequest):
-    """Scraper endpoint: returns only HTML context and image URLs for a product page"""
-    print(f"\n🔍 SCRAPING PRODUCT CONTEXT: {request.url}")
-    try:
-        from scraper.utils.product_context import scrapeProductContext
-        result = await scrapeProductContext(request.url)
-        # Log result for backend visibility
-        images = result.get('images', {})
-        print(f"[API] scrape-product-context images.urlMainimage: {images.get('urlMainimage')}")
-        print(f"[API] scrape-product-context images.otherMainImages: {images.get('otherMainImages')}")
-        html_ctx = result.get('relevantHtmlProductContext', '')
-        html_preview = html_ctx if len(html_ctx) < 200 else html_ctx[:200] + '...'
-        print(f"[API] scrape-product-context relevantHtmlProductContext: {html_preview}")
-        return result
-    except Exception as e:
-        print(f"💥 PRODUCT CONTEXT SCRAPE ERROR: {e}")
-        raise HTTPException(status_code=500, detail=f"Error scraping product context: {e}")
 
 @app.get("/health")
 async def health_check():
