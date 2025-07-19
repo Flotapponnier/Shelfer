@@ -17,9 +17,12 @@ import {
 import { downloadJsonFile } from "../../utils/file-download";
 import type { JsonValue } from "../../types/json";
 import { Product } from "schema-dts";
+import { Download } from "lucide-react";
+import { RefreshCw, CheckCircle } from "lucide-react";
+import { approveAllFields } from "../../utils/validation";
 
 export default function ProductDataEnrichment({ data }: { data: Product }) {
-	const { enrichedProduct, updateFieldValue, diffResult } = useProductData(
+	const { enrichedProduct, updateFieldValue, diffResult, setEnrichedProduct } = useProductData(
 		originalProduct,
 		initialEnrichedProduct,
 	);
@@ -28,6 +31,7 @@ export default function ProductDataEnrichment({ data }: { data: Product }) {
 	const { editingState, startEditing, stopEditing, isEditing } = useEditing();
 
 	const pendingFields = getAllPendingFields(diffResult, validationStates);
+	console.log('Pending fields:', pendingFields);
 	const isDownloadEnabled = pendingFields.length === 0;
 
 	const handleDownload = () => {
@@ -51,39 +55,46 @@ export default function ProductDataEnrichment({ data }: { data: Product }) {
 		}
 	};
 
+	// Approve all pending fields
+	const handleApproveAll = () => {
+		approveAllFields(enrichedProduct, [], handleValidation);
+	};
+
+	// Remove field handler
+	const handleRemoveField = (fieldPath: string) => {
+		const pathArray = fieldPath.split(".");
+		// Always deep clone to avoid mutating the original object
+		const newData = JSON.parse(JSON.stringify(enrichedProduct));
+		let current: Record<string, unknown> = newData;
+		for (let i = 0; i < pathArray.length - 1; i++) {
+			if (!current[pathArray[i]]) return; // Path does not exist
+			current = current[pathArray[i]] as Record<string, unknown>;
+		}
+		const finalKey = pathArray[pathArray.length - 1];
+		if (Array.isArray(current)) {
+			const idx = parseInt(finalKey.replace(/\[|\]/g, ""), 10);
+			if (!isNaN(idx)) (current as unknown as unknown[]).splice(idx, 1);
+		} else {
+			delete current[finalKey];
+		}
+		// Always set a new object at the root to avoid mutating the original
+		setEnrichedProduct(newData);
+	};
+
 	return (
-		<div className="min-h-screen bg-gray-50 p-6">
-			<div className="max-w-7xl mx-auto">
+		<div className="min-h-screen">
+			<div className="mx-auto w-full">
 				{/* Main Heading */}
 				<div className="text-center mb-8">
-					<h1 className="text-4xl font-bold text-gray-900 mb-2">
-						Product Data Enrichment
-					</h1>
 					<p className="text-lg text-gray-600">
-						Transform your product data with AI-powered enrichment
+						Approve and edit the enriched product data here
 					</p>
 				</div>
 
-				{/* Two Panel Layout */}
-				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-					{/* Left Panel - Original Product Data */}
+				{/* Single Panel Layout - Only Enriched Product Data */}
+				<div className="w-full px-2 sm:px-4 md:px-8 lg:px-16 xl:px-32 2xl:px-64">
 					<Card className="h-fit">
-						<CardHeader className="pb-4">
-							<CardTitle className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-								<div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-								Original Product Data
-							</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<div className="bg-gray-100 rounded-lg p-6 border-2 border-dashed border-gray-300">
-								<JsonTreeView data={originalProduct} />
-							</div>
-						</CardContent>
-					</Card>
-
-					{/* Right Panel - Enriched Product Data */}
-					<Card className="h-fit">
-						<CardHeader className="pb-4">
+						<CardHeader className="pb-4 flex flex-row items-center justify-between">
 							<CardTitle className="text-xl font-semibold text-gray-800 flex items-center gap-2">
 								<div className="w-3 h-3 bg-green-500 rounded-full"></div>
 								Enriched Product Data
@@ -91,6 +102,27 @@ export default function ProductDataEnrichment({ data }: { data: Product }) {
 									(Click values to edit • Hover to approve/decline)
 								</span>
 							</CardTitle>
+							<div className="flex gap-2">
+								{pendingFields.length > 0 && (
+									<button
+										onClick={handleApproveAll}
+										className="px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 bg-green-500 text-white hover:bg-green-600 hover:shadow-lg transform hover:scale-105"
+									>
+										<CheckCircle className="w-4 h-4" />
+										Approve All Changes
+									</button>
+								)}
+								<button
+									onClick={() => {
+										resetValidation();
+										setEnrichedProduct(JSON.parse(JSON.stringify(initialEnrichedProduct)));
+									}}
+									className="px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 bg-gray-200 text-gray-700 hover:bg-gray-300 hover:shadow-lg transform hover:scale-105"
+								>
+									<RefreshCw className="w-4 h-4" />
+									Reset Validation
+								</button>
+							</div>
 						</CardHeader>
 						<CardContent>
 							<div className="bg-gray-100 rounded-lg p-6 border-2 border-dashed border-gray-300">
@@ -103,6 +135,7 @@ export default function ProductDataEnrichment({ data }: { data: Product }) {
 									onStartEditing={startEditing}
 									onStopEditing={stopEditing}
 									onUpdateValue={handleUpdateValue}
+									onRemoveField={handleRemoveField}
 								/>
 							</div>
 						</CardContent>
@@ -111,22 +144,6 @@ export default function ProductDataEnrichment({ data }: { data: Product }) {
 
 				{/* Action Buttons */}
 				<div className="flex justify-center gap-4 mt-8">
-					<button className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
-						Upload Data
-					</button>
-					<button className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">
-						Start Enrichment
-					</button>
-					<button
-						onClick={resetValidation}
-						className="px-6 py-3 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
-					>
-						Reset Validation
-					</button>
-				</div>
-
-				{/* Download Section */}
-				<div className="flex justify-center mt-6">
 					<DownloadButton
 						isEnabled={isDownloadEnabled}
 						pendingCount={pendingFields.length}

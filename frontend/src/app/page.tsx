@@ -51,15 +51,24 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-12">
+              <div className="text-center mb-8 mx-auto">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            AI Product Analyzer
+          Product Data Enrichment
           </h1>
-          <p className="text-xl text-gray-600">
-            Enter a product URL to scrape and analyze with AI-powered recommendations
-          </p>
         </div>
+      {!result && (
+        <>
+
+
+
+      <div className="w-full mx-auto">
+
+      <div className="text-center mb-12 max-w-sm mx-auto">
+
+          <p className="text-xl text-gray-600">
+            Enter a URL of an e-commerce shop&apos;s product page to scrape and enrich it with AI-powered recommendations
+          </p>
+          </div>
 
         <div className="bg-white rounded-lg shadow-xl p-8 mb-8">
           <div className="space-y-4 mb-6">
@@ -87,18 +96,21 @@ export default function Home() {
             </button>
           </div>
 
-        {result && (
-          <div className="bg-white rounded-lg shadow-xl p-8 mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Analysis Results</h2>
-            <ProductDataEnrichment data={result} />
-          </div>
-        )}
+       
         </div>
 
         <div className="text-center text-gray-500">
           <p>Powered by AI-driven product analysis using ChatGPT and web scraping</p>
         </div>
       </div>
-    </div>
+    </>
+  )}
+
+{result && (
+          <>
+            <ProductDataEnrichment data={result} />
+          </>
+        )}
+  </div>
   );
 }

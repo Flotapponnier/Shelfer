@@ -40,5 +40,6 @@ export function useProductData(
     enrichedProduct,
     updateFieldValue,
     diffResult,
+    setEnrichedProduct,
   }
 }

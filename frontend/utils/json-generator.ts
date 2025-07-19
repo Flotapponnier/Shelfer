@@ -2,30 +2,30 @@ import { DiffType, type DiffResult } from "./json-diff"
 import { ValidationState, type FieldValidation } from "../types/validation"
 
 export function generateFinalJson(
-  originalData: any,
-  enrichedData: any,
+  originalData: unknown,
+  enrichedData: unknown,
   diffResult: DiffResult,
   validationStates: FieldValidation,
-): any {
+): unknown {
   return processObject(originalData, enrichedData, diffResult, validationStates, [])
 }
 
 function processObject(
-  originalData: any,
-  enrichedData: any,
+  originalData: unknown,
+  enrichedData: unknown,
   diffResult: DiffResult,
   validationStates: FieldValidation,
   currentPath: string[],
-): any {
+): unknown {
   if (enrichedData === null || enrichedData === undefined) {
-    return enrichedData
+    return enrichedData;
   }
 
   if (typeof enrichedData !== "object" || Array.isArray(enrichedData)) {
-    return enrichedData
+    return enrichedData;
   }
 
-  const result: any = {}
+  const result: Record<string, unknown> = {};
 
   // Process each key in the enriched data
   for (const [key, enrichedValue] of Object.entries(enrichedData)) {
@@ -96,26 +96,38 @@ export function getAllPendingFields(
 ): string[] {
   const pendingFields: string[] = []
 
+  const isPrimitive = (val: any) => val === null || typeof val !== "object";
+
   for (const [key, diffInfo] of Object.entries(diffResult)) {
+    if (key === "@type") continue; // Never count @type as pending
     const currentPath = [...path, key]
     const fieldPath = currentPath.join(".")
     const validationState = validationStates[fieldPath] || ValidationState.PENDING
 
-    // Check if this field needs validation
-    if (
-      validationState === ValidationState.PENDING &&
-      (diffInfo.type === DiffType.NEW || diffInfo.type === DiffType.MODIFIED)
-    ) {
-      // For primitive values, add to pending list
-      if (!diffInfo.nested) {
+    if (isPrimitive(diffInfo.value)) {
+      if (
+        validationState === ValidationState.PENDING &&
+        (diffInfo.type === DiffType.NEW || diffInfo.type === DiffType.MODIFIED)
+      ) {
         pendingFields.push(fieldPath)
       }
     }
 
-    // Recursively check nested objects
+    // Recursively check nested objects or arrays
     if (diffInfo.nested) {
-      const nestedPending = getAllPendingFields(diffInfo.nested, validationStates, currentPath)
-      pendingFields.push(...nestedPending)
+      if (Array.isArray(diffInfo.value)) {
+        for (const arrayKey of Object.keys(diffInfo.nested)) {
+          const nestedPath = [...currentPath, arrayKey]
+          const nestedDiff = diffInfo.nested[arrayKey]
+          if (nestedDiff && typeof nestedDiff === 'object' && !Array.isArray(nestedDiff) && !('type' in nestedDiff)) {
+            const nestedPending = getAllPendingFields(nestedDiff as DiffResult, validationStates, nestedPath)
+            pendingFields.push(...nestedPending)
+          }
+        }
+      } else {
+        const nestedPending = getAllPendingFields(diffInfo.nested as DiffResult, validationStates, currentPath)
+        pendingFields.push(...nestedPending)
+      }
     }
   }
 
