@@ -1,9 +1,22 @@
 import { NextResponse } from 'next/server';
+import { enrichedProduct, originalProduct } from '@/data/sample-products';
 
 export async function POST(request: Request) {
   const body = await request.json();
   const { url } = body;
+
+  // DEV_MODE: Return static sample data if enabled
+  if (process.env.DEV_MODE === 'true') {
+    return NextResponse.json({
+      enrichedProductSchema: enrichedProduct,
+      originalProductSchema: originalProduct,
+    });
+  }
   
+    // Always throw on error, never return an error property in the response
+  // Only return the success shape
+  // The frontend will only receive the success shape if result is not empty
+  // If an error occurs, the response will have a non-2xx status and the frontend will not set result
   try {
     // Call the backend enrich-product-schema endpoint with your scrapeProductContext function
     const response = await fetch('http://localhost:8000/enrich-product-schema', {
@@ -19,12 +32,10 @@ export async function POST(request: Request) {
     }
     
     const data = await response.json();
-    return NextResponse.json(data);
+    return NextResponse.json({enrichedProductSchema: data.enrichedProductSchema, originalProductSchema: data.originalProductSchema});
   } catch (error) {
     console.error('Error calling scraper:', error);
-    return NextResponse.json(
-      { error: 'Failed to scrape product data' },
-      { status: 500 }
-    );
+    // Throw to ensure only the success shape is ever returned
+    throw error;
   }
 } 

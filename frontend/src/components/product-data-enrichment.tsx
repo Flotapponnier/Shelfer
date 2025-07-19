@@ -1,30 +1,25 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import JsonTreeView from "./json-tree-view";
-import {
-	originalProduct,
-	enrichedProduct as initialEnrichedProduct,
-} from "../../data/sample-products";
-import { useValidation } from "../hooks/use-validation";
-import { useEditing } from "../hooks/use-editing";
-import { useProductData } from "../hooks/use-product-data";
-import DownloadButton from "../components/download-button";
+import { CheckCircle, RefreshCw } from "lucide-react";
+import type { JsonValue } from "../../types/json";
+import { downloadJsonFile } from "../../utils/file-download";
 import {
 	generateFinalJson,
 	getAllPendingFields,
 } from "../../utils/json-generator";
-import { downloadJsonFile } from "../../utils/file-download";
-import type { JsonValue } from "../../types/json";
-import { Product } from "schema-dts";
-import { Download } from "lucide-react";
-import { RefreshCw, CheckCircle } from "lucide-react";
 import { approveAllFields } from "../../utils/validation";
+import DownloadButton from "../components/download-button";
+import { useEditing } from "../hooks/use-editing";
+import { useProductData } from "../hooks/use-product-data";
+import { ProductSchemaEnrichmentResponse } from "../hooks/use-product-schema-enrichment";
+import { useValidation } from "../hooks/use-validation";
+import JsonTreeView from "./json-tree-view";
 
-export default function ProductDataEnrichment({ data }: { data: Product }) {
+export default function ProductDataEnrichment({data}: {data: ProductSchemaEnrichmentResponse}) {
 	const { enrichedProduct, updateFieldValue, diffResult, setEnrichedProduct } = useProductData(
-		originalProduct,
-		initialEnrichedProduct,
+		data.originalProductSchema,
+		data.enrichedProductSchema,
 	);
 	const { validationStates, handleValidation, resetValidation } =
 		useValidation();
@@ -38,7 +33,7 @@ export default function ProductDataEnrichment({ data }: { data: Product }) {
 		if (!isDownloadEnabled) return;
 
 		const finalJson = generateFinalJson(
-			originalProduct,
+			data.originalProductSchema,
 			enrichedProduct,
 			diffResult,
 			validationStates,
@@ -57,7 +52,7 @@ export default function ProductDataEnrichment({ data }: { data: Product }) {
 
 	// Approve all pending fields
 	const handleApproveAll = () => {
-		approveAllFields(enrichedProduct, [], handleValidation);
+		approveAllFields(enrichedProduct as unknown as JsonValue, [], handleValidation);
 	};
 
 	// Remove field handler
@@ -115,7 +110,7 @@ export default function ProductDataEnrichment({ data }: { data: Product }) {
 								<button
 									onClick={() => {
 										resetValidation();
-										setEnrichedProduct(JSON.parse(JSON.stringify(initialEnrichedProduct)));
+										setEnrichedProduct(JSON.parse(JSON.stringify(data.enrichedProductSchema)));
 									}}
 									className="px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 bg-gray-200 text-gray-700 hover:bg-gray-300 hover:shadow-lg transform hover:scale-105"
 								>

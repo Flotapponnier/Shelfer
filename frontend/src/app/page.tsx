@@ -1,52 +1,20 @@
 "use client";
 
 import ProductDataEnrichment from "@/components/product-data-enrichment";
-import { useState } from "react";
-import { Product } from "schema-dts";
+import { useProductSchemaEnrichment } from "@/hooks/use-product-schema-enrichment";
 
 export default function Home() {
-  const [url, setUrl] = useState<string>("");
-  const [result, setResult] = useState<Product | undefined>(undefined);
-  const [loading, setLoading] = useState(false);
-
-  const analyzeProducts = async () => {
-    if (!url.trim()) return;
-    
-    setLoading(true);
-    try {
-      const response = await fetch("/api/enrich-product-schema", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ url: url.trim() }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      setResult(data);
-    } catch (error) {
-      console.error("Error analyzing products:", error);
-      setResult(undefined);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    url,
+    setUrl,
+    result,
+    loading,
+    enrichProductSchema,
+    isValidUrl,
+  } = useProductSchemaEnrichment();
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUrl(e.target.value);
-  };
-
-  const isValidUrl = (string: string) => {
-    try {
-      new URL(string);
-      return true;
-    } catch (_) {
-      return false;
-    }
   };
 
   return (
@@ -88,7 +56,7 @@ export default function Home() {
               )}
             </div>
             <button
-              onClick={analyzeProducts}
+              onClick={enrichProductSchema}
               disabled={loading || !url.trim() || !isValidUrl(url.trim())}
               className="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
