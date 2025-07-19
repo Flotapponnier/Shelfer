@@ -111,6 +111,11 @@ class HtmlExtractorService:
             str: Relevant HTML chunks for the property
         """
         try:
+            # Check if product_html is empty - return empty result to prevent hallucination
+            if not product_html or not product_html.strip():
+                logger.warning(f"Empty product HTML provided for property {property_name} - skipping extraction to prevent hallucination")
+                return ""
+            
             # Get property description for context
             property_description = PROPERTY_DESCRIPTIONS.get(
                 property_name, 
