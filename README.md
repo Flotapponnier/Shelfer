@@ -416,6 +416,6 @@ print("Finished:", result.finished)
 
 **Output:**
 
-- An `EnrichedProduct` object with `.data`, `.not_extracted_properties`, and `.finished` attributes.
+- An `EnrichedProduct` object with `.enriched_json_ld_schema`, `.original_json_ld_schema`, `.not_extracted_properties`, and `.finished` attributes.
 
 ---
