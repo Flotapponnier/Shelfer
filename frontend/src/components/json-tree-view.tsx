@@ -71,7 +71,7 @@ function JsonNode({
   const getValueColor = (type: string): string => {
     switch (type) {
       case "string":
-        return "text-green-600"
+        return "text-green-700"
       case "number":
         return "text-blue-600"
       case "boolean":
@@ -99,9 +99,9 @@ function JsonNode({
 
     switch (diffType) {
       case DiffType.NEW:
-        return isValueOnly ? "bg-green-100" : "bg-green-50 border-l-4 border-green-400"
+        return isValueOnly ? "bg-green-50" : "bg-green-50 border-l-4 border-green-400"
       case DiffType.MODIFIED:
-        return isValueOnly ? "bg-yellow-100" : "bg-yellow-50 border-l-4 border-yellow-400"
+        return isValueOnly ? "bg-yellow-50" : "bg-yellow-50 text-yellow-800 border-l-4 border-yellow-400"
       case DiffType.UNCHANGED:
       default:
         return "bg-white"
