@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pyo
+*.pyd
+*.env
+.env
+.venv
+venv/
+build/
+dist/
+*.egg-info/
+
+# FastAPI/uvicorn logs
+*.log
+
+# VSCode
+.vscode/
+
+# macOS
+.DS_Store
+
+# Node.js/Next.js (frontend)
+/frontend/node_modules/
+/frontend/.next/
+/frontend/.env*
+/frontend/.turbo/
+/frontend/.eslintcache
+/frontend/.vercel/
+/frontend/package-lock.json
+
+# General
+*.swp
+*.swo
+
+# Ignore local test and coverage files
+.coverage
+htmlcov/
+
+# Ignore frontend build output
+/frontend/out/
