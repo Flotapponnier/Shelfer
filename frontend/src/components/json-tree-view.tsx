@@ -416,7 +416,15 @@ function JsonNode({
                     </span>
                   )}
                   {isEditable(displayValue) && !isCurrentlyEditing && (
-                    <Edit3 className="w-3 h-3 text-gray-400 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <span title="Edit">
+                      <Edit3
+                        className="w-3 h-3 text-gray-400 ml-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleValueClick(e);
+                        }}
+                      />
+                    </span>
                   )}
                 </div>
               ) : (
