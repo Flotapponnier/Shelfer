@@ -23,30 +23,64 @@ class Enricher:
             return {"error": str(e)}
 
     @staticmethod
-    def enrich(input_data: dict) -> EnrichedProduct:
-        # input_data: { 'json_ld_schema': {...}, 'html_contexts': { prop: {relevant_html_product_context: ...} } }
-        original_schema = dict(input_data.get('json_ld_schema', {}))
-        base_schema = dict(original_schema)  # copy for enrichment
-        html_contexts = input_data.get('html_contexts', {})
+    def enrich(
+        product_metadata: dict, 
+        html_contexts: dict
+    ) -> EnrichedProduct:
+        """
+        Enrich product schema using LLM with clean, separated inputs.
+        
+        Args:
+            product_metadata: {
+                'product_name': str,
+                'product_url': str, 
+                'json_ld_schema': dict (optional existing schema)
+            }
+            html_contexts: {
+                'offers.price': {'relevant_html_product_context': '<span>$29.99</span>'},
+                'material': {'relevant_html_product_context': '<div>Cotton</div>'},
+                ...
+            }
+            
+        Returns:
+            EnrichedProduct with enriched schema and metadata
+        """
+        # Extract product metadata
+        product_name = product_metadata.get('product_name', '')
+        product_url = product_metadata.get('product_url', '')
+        
+        # Handle json_ld_schema safely (can be None)
+        json_ld_schema = product_metadata.get('json_ld_schema')
+        original_schema = dict(json_ld_schema) if json_ld_schema else {}
+        
+        # Start with original schema as base for enrichment
+        base_schema = dict(original_schema)
         not_extracted = []
+        
+        # Process each property context
         for prop, ctx in html_contexts.items():
             context = PropertyContext(
-                relevant_html_product_context=ctx.get('relevant_html_product_context'),
-                productName=ctx.get('product_name'),
-                productUrl=ctx.get('product_url')
+                relevant_html_product_context=ctx.get('relevant_html_product_context', '')
             )
+            
             prompt = ENRICHER_USER_PROMPT_TEMPLATE.format(
                 property=prop,
-                product_name=context.productName or "",
-                product_url=context.productUrl or "",
-                html=context.relevant_html_product_context or ""
+                product_name=product_name,
+                product_url=product_url,
+                html=context.relevant_html_product_context
             )
+            
             llm_result = Enricher._call_llm_for_property(prompt)
             value = llm_result.get(prop) if isinstance(llm_result, dict) else llm_result
+            
             if not value:
                 not_extracted.append(prop)
-            base_schema[prop] = value
+            else:
+                base_schema[prop] = value
+        
+        # Add enrichment marker
         base_schema.setdefault("enriched", True)
+        
         return EnrichedProduct(
             enriched_json_ld_schema=base_schema,
             original_json_ld_schema=original_schema,

@@ -10,6 +10,9 @@ from typing import Dict, List, Any, Optional
 from urllib.parse import urljoin, urlparse
 import logging
 
+# Import the new ProductHtmlExtractor
+from services.product_html_extractor import ProductHtmlExtractor
+
 logger = logging.getLogger(__name__)
 
 
@@ -17,6 +20,9 @@ class ProductImageExtractor:
     """Extracts product images from e-commerce pages."""
     
     def __init__(self):
+        # Initialize the advanced HTML extractor
+        self.html_extractor = ProductHtmlExtractor()
+        
         # CSS selectors for product image containers
         self.image_container_selectors = [
             '.product-images',
@@ -312,16 +318,22 @@ class ProductImageExtractor:
             logger.debug(f"ImageExtractor-RAW thumbnails URLs: {raw_thumb_urls}")
             logger.debug(f"ImageExtractor-RAW allProductImages URLs: {raw_all_urls}")
             
-            # Process and deduplicate images
-            processed_images = self._process_extracted_images(image_data, product_name)
+            # Process and deduplicate images (now with advanced HTML extraction)
+            processed_images = await self._process_extracted_images(
+                image_data=image_data, 
+                product_name=product_name, 
+                page=page,
+                schema_data=None  # Schema data will be added later if available
+            )
             
             logger.info(f"After processing images:")
-            logger.info(f"  Main image URL: {processed_images['images']['url_main_image']}")
-            logger.info(f"  Other images count: {len(processed_images['images']['other_images'])}")
-            logger.info(f"  Other image URLs: {processed_images['images']['other_images']}")
+            logger.info(f"  Main image URL: {processed_images['images']['urlMainimage']}")
+            logger.info(f"  Other images count: {len(processed_images['images']['otherMainImages'])}")
+            logger.info(f"  Other image URLs: {processed_images['images']['otherMainImages']}")
+            logger.info(f"  HTML context length: {len(processed_images['relevantHtmlProductContext'])}")
             # Also log for immediate visibility
-            logger.debug(f"ImageExtractor Extracted main image: {processed_images['images']['url_main_image']}")
-            logger.debug(f"ImageExtractor Extracted other images: {processed_images['images']['other_images']}")
+            logger.debug(f"ImageExtractor Extracted main image: {processed_images['images']['urlMainimage']}")
+            logger.debug(f"ImageExtractor Extracted other images: {processed_images['images']['otherMainImages']}")
             
             return processed_images
             
@@ -329,14 +341,14 @@ class ProductImageExtractor:
             logger.error(f"Failed to extract product images: {e}")
             return {
                 "images": {
-                    "url_main_image": None,
-                    "other_images": []
+                    "urlMainimage": None,
+                    "otherMainImages": []
                 },
-                "relevant_html_product_context": "",
-                "json_ld_schema": None
+                "relevantHtmlProductContext": "",
+                "schema.org": None
             }
     
-    def _process_extracted_images(self, image_data: Dict, product_name: str = None) -> Dict[str, Any]:
+    async def _process_extracted_images(self, image_data: Dict, product_name: str = None, page=None, schema_data: Dict = None) -> Dict[str, Any]:
         """Process and organize extracted images."""
         # If no explicit mainImages found, promote high-quality container images as main candidates
         if not image_data.get('mainImages'):
@@ -393,16 +405,36 @@ class ProductImageExtractor:
         main_image = self._get_best_image_url(sorted_images[0]) if sorted_images else None
         other_images = [self._get_best_image_url(img) for img in sorted_images[1:] if self._get_best_image_url(img)] if len(sorted_images) > 1 else []
         
-        # Get relevant HTML context
-        html_context = self._extract_html_context(image_data.get('imageContainers', []))
+        # Get relevant HTML context using the advanced extractor
+        html_context = ""
+        if page:
+            try:
+                logger.info(f"Attempting advanced HTML extraction for product: {product_name}")
+                html_context = await self.html_extractor.extract_product_html_context(
+                    page=page, 
+                    product_name=product_name, 
+                    schema_data=schema_data
+                )
+                logger.info(f"Advanced HTML extractor returned {len(html_context)} characters")
+                if not html_context:
+                    logger.warning("Advanced HTML extractor returned empty result, trying fallback")
+                    html_context = self._extract_html_context_fallback(image_data.get('imageContainers', []))
+            except Exception as e:
+                logger.error(f"Advanced HTML extraction failed with error: {str(e)}", exc_info=True)
+                logger.info("Falling back to basic HTML extraction method")
+                html_context = self._extract_html_context_fallback(image_data.get('imageContainers', []))
+        else:
+            # Fallback to basic method if no page object available
+            logger.info("No page object available, using fallback HTML extraction")
+            html_context = self._extract_html_context_fallback(image_data.get('imageContainers', []))
         
         return {
             "images": {
-                "url_main_image": main_image,
-                "other_images": other_images
+                "urlMainimage": main_image,
+                "otherMainImages": other_images
             },
-            "relevant_html_product_context": html_context,
-            "json_ld_schema": None  # Will be filled by the main scraper
+            "relevantHtmlProductContext": html_context,
+            "schema.org": None  # Will be filled by the main scraper
         }
     
     def _get_best_image_url(self, img: Dict) -> Optional[str]:
@@ -452,7 +484,7 @@ class ProductImageExtractor:
             score += 10
         
         # Quality indicators in URL
-        img_url = img.get('src', '')
+        img_url = img.get('src', '') or ''
         for keyword in self.quality_keywords:
             if keyword in img_url.lower():
                 score += 20
@@ -467,7 +499,7 @@ class ProductImageExtractor:
                 score += matching_words * 15
         
         # Avoid icons, logos, and small images
-        if any(term in img_url.lower() for term in ['icon', 'logo', 'sprite', 'button']):
+        if img_url and any(term in img_url.lower() for term in ['icon', 'logo', 'sprite', 'button']):
             score -= 30
         
         if width < 100 or height < 100:
@@ -475,8 +507,8 @@ class ProductImageExtractor:
         
         return score
     
-    def _extract_html_context(self, containers: List[Dict]) -> str:
-        """Extract relevant HTML context from image containers."""
+    def _extract_html_context_fallback(self, containers: List[Dict]) -> str:
+        """Fallback method: Extract relevant HTML context from image containers."""
         if not containers:
             return ""
         

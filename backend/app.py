@@ -1,12 +1,18 @@
-import os
-import json
-import requests
-from typing import Dict, Any, List, Optional
-from fastapi import FastAPI, UploadFile, File, HTTPException
+"""
+Clean FastAPI Application - Focused on Product Enrichment
+
+Only includes the components actually being used:
+- /enrich-product-schema endpoint (main functionality)
+- Supporting helper functions
+- Basic FastAPI setup
+"""
+
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from openai_client import OpenAIClient
+from services.extractor_service import ExtractorService
+from enrichment.enricher import Enricher
 
 load_dotenv()
 
@@ -21,305 +27,161 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
-# Initialize OpenAI Client
-openai_client = OpenAIClient()
+# Initialize Extractor Service (only service we actually use)
+extractor_service = ExtractorService()
 
-class ComparisonRequest(BaseModel):
-    products: List[Dict[str, Any]]
-
-class ProductImprovement(BaseModel):
-    category: str
-    priority: str
-    current: str
-    suggested: str
-    impact: str
-
-class ProductAnalysisResponse(BaseModel):
-    overall_score: int
-    strengths: List[str]
-    weaknesses: List[str]
-    improvements: List[ProductImprovement]
-    seo_recommendations: List[str]
-    missing_fields: List[str]
-    conversion_tips: List[str]
-    analysis: Optional[str] = None
-    error: Optional[str] = None
-
+# Pydantic models (only the ones actually used)
 class URLRequest(BaseModel):
     url: str
 
-class SchemaValidationRequest(BaseModel):
-    schema_data: Dict[str, Any]
-
-def validate_schema_org_product(product: Dict[str, Any]) -> bool:
-    """Validate that the product data follows schema.org structure"""
-    required_fields = ["@type", "name"]
-    return all(field in product for field in required_fields)
-
-def extract_products_from_data(data: Any) -> List[Dict[str, Any]]:
-    """Extract product objects from complex nested schema.org data"""
-    products = []
-    
-    def find_products(obj):
-        if isinstance(obj, dict):
-            if obj.get("@type") == "Product":
-                products.append(obj)
-            elif "hasVariant" in obj and isinstance(obj["hasVariant"], list):
-                # Handle product variants
-                for variant in obj["hasVariant"]:
-                    if isinstance(variant, dict) and variant.get("@type") == "Product":
-                        products.append(variant)
-            # Recursively search in all dict values
-            for value in obj.values():
-                find_products(value)
-        elif isinstance(obj, list):
-            # Recursively search in all list items
-            for item in obj:
-                find_products(item)
-    
-    find_products(data)
-    return products
-
-async def process_uploaded_file(file: UploadFile) -> List[Dict[str, Any]]:
-    """Process uploaded JSON file containing schema.org product data"""
-    try:
-        # Validate file type
-        if not file.content_type.startswith('application/json') and not file.filename.endswith('.json'):
-            raise HTTPException(status_code=400, detail="File must be JSON format")
-        
-        # Read and parse JSON content
-        content = await file.read()
-        
-        try:
-            data = json.loads(content.decode('utf-8'))
-        except json.JSONDecodeError:
-            raise HTTPException(status_code=400, detail="Invalid JSON format")
-        
-        # Extract products from the data structure
-        products = extract_products_from_data(data)
-        
-        if not products:
-            raise HTTPException(status_code=400, detail="No valid product data found in JSON")
-        
-        return products
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
-
-@app.get("/")
-async def root():
-    return {"message": "AI Product Analyzer API", "version": "1.0.0"}
-
-@app.post("/analyze")
-async def analyze_products(file: UploadFile = File(...)):
-    """Upload and analyze schema.org product data file"""
-    print(f"\n🔄 RECEIVED REQUEST: Analyzing file '{file.filename}'")
-    try:
-        # Process uploaded file
-        print(f"📁 Processing uploaded file: {file.filename}")
-        products_data = await process_uploaded_file(file)
-        print(f"✅ Found {len(products_data)} products to analyze")
-        
-        # Analyze products with AI
-        results = []
-        
-        for i, product in enumerate(products_data, 1):
-            try:
-                print(f"🔍 Analyzing product {i}/{len(products_data)}: {product.get('name', 'Unknown')}")
-                
-                # Validate required fields
-                if not validate_schema_org_product(product):
-                    print(f"⚠️  Product {i} failed validation - skipping")
-                    continue
-                
-                # Analyze with ChatGPT
-                print(f"🤖 Sending product {i} to ChatGPT for analysis...")
-                analysis = await chatgpt_model.analyze_product(product)
-                print(f"✅ ChatGPT analysis complete for product {i} - Score: {analysis.get('overall_score', 'N/A')}/100")
-                
-                # Convert to response model
-                response = ProductAnalysisResponse(**analysis)
-                results.append(response)
-                
-            except Exception as e:
-                print(f"❌ Error analyzing product {i}: {str(e)}")
-                # Add error response for failed analysis
-                error_response = ProductAnalysisResponse(
-                    overall_score=0,
-                    strengths=[],
-                    weaknesses=["Analysis failed"],
-                    improvements=[],
-                    seo_recommendations=[],
-                    missing_fields=[],
-                    conversion_tips=[],
-                    error=str(e)
-                )
-                results.append(error_response)
-        
-        print(f"🎉 ANALYSIS COMPLETE: Returning {len(results)} product analyses")
-        return results
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"💥 FATAL ERROR: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
-
-@app.post("/compare")
-async def compare_products(request: ComparisonRequest):
-    """Compare multiple products and provide competitive analysis"""
-    try:
-        analysis = await chatgpt_model.compare_products(request.products)
-        return analysis
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Comparison failed: {str(e)}")
-
-@app.post("/validate-schema")
-async def validate_schema(request: SchemaValidationRequest):
-    """Validate schema.org markup and suggest improvements"""
-    try:
-        validation = await chatgpt_model.validate_schema(request.schema_data)
-        return validation
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Schema validation failed: {str(e)}")
-
-async def get_product_context(productUrl: str):
-    """Helper function: calls scrapeProductContext(productUrl) and returns formatted result"""
-    from scraper.utils.product_context import scrapeProductContext
-    
-    # Call your scraper function with exact signature: scrapeProductContext(productUrl)
-    result = await scrapeProductContext(productUrl)
-    
-    return {
-        "product_html": result.get('relevant_html_product_context', ''),
-        "images": {
-            "url_main_image": result.get('images', {}).get('url_main_image', ''),
-            "other_images": result.get('images', {}).get('other_images', [])
-        },
-        "json_ld_schema": result.get('json_ld_schema', None)
-    }
+# No helper functions - keeping controller truly lightweight
 
 @app.post("/enrich-product-schema")
 async def enrich_product_schema(request: URLRequest):
-    """Product enrichment endpoint: URL → scrapeProductContext → enrichment pipeline"""
+    """
+    Product enrichment endpoint: URL → scrapeProductContext → extractor pipeline
+    
+    Workflow:
+    1. Scrapes product page using get_product_context()
+    2. Extracts 32 schema.org properties (22 from HTML + 10 from images)  
+    3. Returns enriched data ready for further processing
+    """
     print(f"\n🔄 RECEIVED ENRICHMENT REQUEST: {request.url}")
     
     try:
         print(f"🌐 Step 1: Extracting product context from {request.url}...")
         
-        # Call helper function to get product context
-        productContext = await get_product_context(request.url)
+        # Get scraped data directly from scraper
+        from scraper.utils.product_context import scrapeProductContext
+        scraper_result = await scrapeProductContext(request.url)
         
-        # Log the results
-        print(f"[API] enrich-product-schema url_main_image: {productContext['images']['url_main_image']}")
-        print(f"[API] enrich-product-schema other_images: {productContext['images']['other_images']}")
-        preview = productContext['relevant_html_product_context']
+        # Debug: Log the raw scraper result
+        print(f"🔍 DEBUG: Raw scraper result keys: {list(scraper_result.keys()) if scraper_result else 'None'}")
+        print(f"🔍 DEBUG: Raw scraper result: {scraper_result}")
+        
+        # Format scraped data for extractor service
+        scraped_data = {
+            "product_html": scraper_result.get('relevant_html_product_context', ''),
+            "images": {
+                "url_main_image": scraper_result.get('images', {}).get('url_main_image', ''),
+                "other_images": scraper_result.get('images', {}).get('other_images', [])
+            },
+            "json_ld_schema": scraper_result.get('json_ld_schema', None)
+        }
+        
+        # Log the scraped results
+        print(f"[API] enrich-product-schema url_main_image: {scraped_data['images']['url_main_image']}")
+        print(f"[API] enrich-product-schema other_images: {scraped_data['images']['other_images']}")
+        preview = scraped_data.get('product_html', '')
         preview = preview if len(preview) < 200 else preview[:200] + '...'
-        print(f"[API] enrich-product-schema relevant_html_product_context: {preview}")
+        print(f"[API] enrich-product-schema product_html: {preview}")
         
-        # TODO: Add enrichment pipeline here - for now return scraper result
-        # This is where HTML extractor and enricher would be called
-        print(f"🧠 Step 2: AI enrichment pipeline (TODO - returning raw scraper data for now)")
+        print(f"✅ Scraped data obtained successfully")
         
-        # Return the product context (enrichment pipeline will be added later)
-        return {
+        # Step 2: Run extraction pipeline (HTML + Image extractors)
+        print(f"🧠 Step 2: Running AI extraction pipeline...")
+        
+        extraction_result = await extractor_service.extract_product_data(
+            scraped_data=scraped_data,
+            product_name=None,  # Could extract from HTML if needed
+            product_url=request.url
+        )
+        
+        # Log extraction summary
+        metadata = extraction_result.get("processing_metadata", {})
+        total_extracted = metadata.get("total_properties_extracted", 0)
+        total_properties = metadata.get("total_properties", 0)
+        success_rate = metadata.get("overall_success_rate", 0)
+        
+        print(f"📊 Extraction completed:")
+        print(f"   • Properties extracted: {total_extracted}/{total_properties}")
+        print(f"   • Success rate: {success_rate:.1%}")
+        print(f"   • HTML properties: {metadata.get('html_properties_extracted', 0)}")
+        print(f"   • Image properties: {metadata.get('image_properties_extracted', 0)}")
+        
+        # Step 3: Run enricher to convert extracted contexts into schema.org properties
+        print(f"✨ Step 3: Running schema enrichment...")
+        
+        # Prepare product metadata for enricher (clean, no redundancy)
+        product_metadata = {
+            "product_name": None,  # TODO: Could extract from HTML or let enricher infer
+            "product_url": request.url,
+            "json_ld_schema": extraction_result.get("json_ld_schema")
+        }
+        
+        # Get HTML contexts from extraction results  
+        html_contexts = extraction_result.get("html_contexts", {})
+        
+        try:
+            # Call enricher with clean interface
+            enriched_result = Enricher.enrich(
+                product_metadata=product_metadata,
+                html_contexts=html_contexts
+            )
+            
+            # Log enrichment summary
+            enriched_properties = len(html_contexts) - len(enriched_result.not_extracted_properties)
+            enrichment_success_rate = enriched_properties / len(html_contexts) if html_contexts else 0
+            
+            print(f"📈 Enrichment completed:")
+            print(f"   • Properties enriched: {enriched_properties}/{len(html_contexts)}")
+            print(f"   • Enrichment success rate: {enrichment_success_rate:.1%}")
+            print(f"   • Failed properties: {enriched_result.not_extracted_properties}")
+            print(f"   • Final schema complete: {enriched_result.finished}")
+            
+            enrichment_metadata = {
+                "properties_processed": len(html_contexts),
+                "properties_enriched": enriched_properties,
+                "properties_failed": len(enriched_result.not_extracted_properties),
+                "failed_properties": enriched_result.not_extracted_properties,
+                "success_rate": enrichment_success_rate,
+                "schema_complete": enriched_result.finished
+            }
+            
+        except Exception as e:
+            print(f"⚠️ Enrichment failed: {str(e)}")
+            # Continue with extraction results only
+            enriched_result = None
+            enrichment_metadata = {
+                "error": str(e),
+                "properties_processed": len(html_contexts),
+                "properties_enriched": 0,
+                "success_rate": 0,
+                "schema_complete": False
+            }
+        
+        # Return comprehensive results
+        response = {
             "url": request.url,
             "status": "success",
-            "productContext": productContext
+            "scraped_data": scraped_data,
+            "extraction_results": extraction_result,
+            "extraction_metadata": metadata
         }
+        
+        # Add enrichment results if successful
+        if enriched_result:
+            response["enriched_schema"] = enriched_result.enriched_json_ld_schema
+            response["original_schema"] = enriched_result.original_json_ld_schema
+        
+        response["enrichment_metadata"] = enrichment_metadata
+        
+        return response
         
     except Exception as e:
         print(f"💥 FATAL ERROR in enrich-product-schema: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Product enrichment failed: {str(e)}")
 
-# Old scraper endpoints removed - using scrapeProductContext instead
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    print("💓 Health check requested")
+    return {
+        "status": "healthy",
+        "extractor_service_ready": True
+    }
 
-@app.post("/scrape-main-product")
-async def scrape_main_product(request: URLRequest):
-    """Smart endpoint that focuses on extracting the main product only, filtering out suggestions"""
-    print(f"\n🎯 MAIN PRODUCT MODE: Analyzing {request.url}")
-    
-    try:
-        # Import the focused main product scraper and context helper
-        from scraper.main import scrape_main_product as _scraper_main_product
-        from scraper.utils.product_context import scrapeProductContext as _scrape_product_context
-        
-        print(f"🔍 Starting focused main product extraction for: {request.url}")
-        # Step 1: extract main product data (schema & analysis)
-        result = await _scraper_main_product(
-            domain_url=request.url,
-            headless=True,
-            delay=1.0
-        )
-        # Step 2: extract image URLs and HTML context by slug-based logic
-        context_data = await _scrape_product_context(request.url)
-        images = context_data.get('images', {})
-        html_context = context_data.get('relevant_html_product_context', '')
-        
-        main_product = result.get('main_product')
-        all_products = result.get('all_products_found', [])
-        analysis = result.get('analysis', {})
-        
-        print(f"🎯 MAIN PRODUCT ANALYSIS:")
-        print(f"   📦 Total products found: {len(all_products)}")
-        print(f"   🎯 Main product detected: {main_product is not None}")
-        print(f"   📊 Confidence: {analysis.get('main_product_confidence', 'unknown')}")
-        # Show extracted images and context (from product_context)
-        print(f"[API] scrape-main-product url_main_image: {images.get('url_main_image')}")
-        print(f"[API] scrape-main-product other_images: {images.get('other_images')}")
-        preview = html_context if len(html_context) < 200 else html_context[:200] + '...'
-        print(f"[API] scrape-main-product relevant_html_product_context: {preview}")
-        print(f"[API] scrape-main-product url_main_image: {images.get('url_main_image')}")
-        print(f"[API] scrape-main-product other_images: {images.get('other_images')}")
-        # HTML context preview
-        preview = html_context if len(html_context) < 200 else html_context[:200] + '...'
-        print(f"[API] scrape-main-product relevant_html_product_context: {preview}")
-        # Return focused main product data including images and context
-        return {
-            "url": request.url,
-            "status": "success",
-            "main_product": main_product,
-            "products_analyzed": len(all_products),
-            "all_products_found": all_products,
-            "analysis": analysis,
-            "images": images,
-            "relevant_html_product_context": html_context,
-            "detection_summary": {
-                "main_product_found": main_product is not None,
-                "confidence_level": analysis.get('main_product_confidence', 'unknown'),
-                "total_products_on_page": len(all_products),
-                "algorithm_used": "main_product_detector_v1"
-            }
-        }
-        
-    except Exception as e:
-        print(f"💥 MAIN PRODUCT EXTRACTION ERROR: {str(e)}")
-        return {
-            "url": request.url,
-            "status": "error",
-            "error": str(e),
-            "main_product": None,
-            "products_analyzed": 0,
-            "analysis": {"error": str(e)}
-        }
-    
-
-@app.options("/scrape-and-analyze")
-async def scrape_options():
-    """Handle CORS preflight for scrape-and-analyze endpoint"""
-    print("🔧 OPTIONS request received for /scrape-and-analyze")
-    return {"message": "OK"}
-
-# Old scraper options handlers removed
-
-@app.options("/scrape-main-product")
-async def scrape_main_product_options():
-    """Handle CORS preflight for scrape-main-product endpoint"""
-    print("🔧 OPTIONS request received for /scrape-main-product")
-    return {"message": "OK"}
-
+# CORS middleware (needed for frontend integration)
 @app.middleware("http")
 async def cors_handler(request, call_next):
     """Custom CORS middleware for debugging"""
@@ -335,12 +197,4 @@ async def cors_handler(request, call_next):
         return response
     
     response = await call_next(request)
-    return response
-
-@app.get("/health")
-async def health_check():
-    print("💓 Health check requested")
-    return {
-        "status": "healthy",
-        "openai_configured": bool(os.getenv("OPENAI_API_KEY"))
-    }
+    return response 

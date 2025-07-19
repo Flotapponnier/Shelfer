@@ -14,7 +14,7 @@
 #
 # For more details, run: make help
 
-.PHONY: help backend-install backend-run frontend-install frontend-run kill-backend-port init test-html test-image test-all
+.PHONY: help backend-install backend-run frontend-install frontend-run kill-backend-port init test-html-extractor test-image-extractor test-pipeline test-all
 
 # Default backend port (change if needed)
 BACKEND_PORT ?= 8000
@@ -30,6 +30,7 @@ help:
 	@echo "  make init               			# Install all dependencies (backend with uv & frontend)"
 	@echo "  make test-html-extractor     # Run HTML extractor service test (22 properties)"
 	@echo "  make test-image-extractor    # Run image extractor service test (10 properties)"
+	@echo "  make test-pipeline      			# Run complete extraction pipeline test (32 properties)"
 	@echo "  make test-all           			# Run all extractor service tests"
 
 # Install backend Python dependencies using uv
@@ -48,7 +49,7 @@ kill-backend-port:
 
 # Run FastAPI backend server, killing any process on the port first
 backend-run: kill-backend-port
-	cd backend && uvicorn app:app --reload --port $(BACKEND_PORT)
+	cd backend && uv run uvicorn app:app --reload --port $(BACKEND_PORT)
 
 # Install frontend Node.js dependencies
 frontend-install:
@@ -69,5 +70,9 @@ test-html-extractor:
 test-image-extractor:
 	cd backend && uv run python tests/test_image_extractor.py
 
+# Run complete extraction pipeline test
+test-pipeline:
+	cd backend && uv run python tests/test_extractor_service.py
+
 # Run all extractor service tests
-test-all: test-html-extractor test-image-extractor
+test-all: test-html-extractor test-image-extractor test-pipeline
