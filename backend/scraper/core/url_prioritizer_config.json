@@ -1,0 +1,1178 @@
+{
+    "url_patterns": [
+        {
+            "pattern": "\\.pdf$",
+            "score": -50,
+            "description": "PDF files"
+        },
+        {
+            "pattern": "\\.jpg$",
+            "score": -50,
+            "description": "JPEG image files"
+        },
+        {
+            "pattern": "\\.jpeg$",
+            "score": -50,
+            "description": "JPEG image files"
+        },
+        {
+            "pattern": "\\.png$",
+            "score": -50,
+            "description": "PNG image files"
+        },
+        {
+            "pattern": "\\.gif$",
+            "score": -50,
+            "description": "GIF image files"
+        },
+        {
+            "pattern": "\\.svg$",
+            "score": -50,
+            "description": "SVG image files"
+        },
+        {
+            "pattern": "\\.ico$",
+            "score": -50,
+            "description": "Icon files"
+        },
+        {
+            "pattern": "\\.webp$",
+            "score": -50,
+            "description": "WebP image files"
+        },
+        {
+            "pattern": "\\.css$",
+            "score": -50,
+            "description": "CSS files"
+        },
+        {
+            "pattern": "\\.js$",
+            "score": -50,
+            "description": "JavaScript files"
+        },
+        {
+            "pattern": "\\.xml$",
+            "score": -50,
+            "description": "XML files"
+        },
+        {
+            "pattern": "\\.txt$",
+            "score": -50,
+            "description": "Text files"
+        },
+        {
+            "pattern": "\\.zip$",
+            "score": -50,
+            "description": "ZIP archive files"
+        },
+        {
+            "pattern": "\\.rar$",
+            "score": -50,
+            "description": "RAR archive files"
+        },
+        {
+            "pattern": "\\.mp4$",
+            "score": -50,
+            "description": "MP4 video files"
+        },
+        {
+            "pattern": "\\.avi$",
+            "score": -50,
+            "description": "AVI video files"
+        },
+        {
+            "pattern": "\\.mov$",
+            "score": -50,
+            "description": "MOV video files"
+        },
+        {
+            "pattern": "\\.wav$",
+            "score": -50,
+            "description": "WAV audio files"
+        },
+        {
+            "pattern": "\\.mp3$",
+            "score": -50,
+            "description": "MP3 audio files"
+        },
+        {
+            "pattern": "\\.doc$",
+            "score": -50,
+            "description": "Word document files"
+        },
+        {
+            "pattern": "\\.docx$",
+            "score": -50,
+            "description": "Word document files"
+        },
+        {
+            "pattern": "\\.xls$",
+            "score": -50,
+            "description": "Excel spreadsheet files"
+        },
+        {
+            "pattern": "\\.xlsx$",
+            "score": -50,
+            "description": "Excel spreadsheet files"
+        },
+        {
+            "pattern": "\\.ppt$",
+            "score": -50,
+            "description": "PowerPoint presentation files"
+        },
+        {
+            "pattern": "\\.pptx$",
+            "score": -50,
+            "description": "PowerPoint presentation files"
+        },
+        {
+            "pattern": "\\.csv$",
+            "score": -50,
+            "description": "CSV data files"
+        },
+        {
+            "pattern": "\\.json$",
+            "score": -50,
+            "description": "JSON data files"
+        },
+        {
+            "pattern": "\\.yaml$",
+            "score": -50,
+            "description": "YAML configuration files"
+        },
+        {
+            "pattern": "\\.yml$",
+            "score": -50,
+            "description": "YAML configuration files"
+        },
+        {
+            "pattern": "\\.bmp$",
+            "score": -50,
+            "description": "BMP image files"
+        },
+        {
+            "pattern": "\\.tiff$",
+            "score": -50,
+            "description": "TIFF image files"
+        },
+        {
+            "pattern": "\\.tif$",
+            "score": -50,
+            "description": "TIFF image files"
+        },
+        {
+            "pattern": "/products/[^/?]+",
+            "score": 100,
+            "description": "Shopify: /products/{product-handle} (allows for query params and fragments)"
+        },
+        {
+            "pattern": "/product/[^/]+/$",
+            "score": 100,
+            "description": "WooCommerce: /product/{product-name}/"
+        },
+        {
+            "pattern": "/p/[^/?]+",
+            "score": 100,
+            "description": "Short product pattern: /p/{product-slug} (allows query params)"
+        },
+        {
+            "pattern": "/produkt",
+            "score": 90,
+            "description": "German product pattern"
+        },
+        {
+            "pattern": "/produkte",
+            "score": 90,
+            "description": "German products pattern"
+        },
+        {
+            "pattern": "/p$",
+            "score": 100,
+            "description": "VTEX: /{product-slug}/p"
+        },
+        {
+            "pattern": "/item/[^/?]+",
+            "score": 95,
+            "description": "Generic: /item/{item-name} (allows query params)"
+        },
+        {
+            "pattern": "/goods/[^/?]+",
+            "score": 95,
+            "description": "Generic: /goods/{goods-name} (allows query params)"
+        },
+        {
+            "pattern": "/buy/[^/?]+",
+            "score": 95,
+            "description": "Action-oriented: /buy/{product} (allows query params)"
+        },
+        {
+            "pattern": "/purchase/[^/?]+",
+            "score": 95,
+            "description": "Action-oriented: /purchase/{product} (allows query params)"
+        },
+        {
+            "pattern": "/detail/[^/?]+",
+            "score": 90,
+            "description": "Product detail: /detail/{product} (allows query params)"
+        },
+        {
+            "pattern": "/view/[^/?]+",
+            "score": 90,
+            "description": "Product view: /view/{product} (allows query params)"
+        },
+        {
+            "pattern": "/pdp/[^/?]+",
+            "score": 90,
+            "description": "Product detail page: /pdp/{product} (allows query params)"
+        },
+        {
+            "pattern": "/product-detail/[^/?]+",
+            "score": 90,
+            "description": "Product detail: /product-detail/{product} (allows query params)"
+        },
+        {
+            "pattern": "/product-details/[^/?]+",
+            "score": 90,
+            "description": "Product details: /product-details/{product} (allows query params)"
+        },
+        {
+            "pattern": "/shop/[^/]+/[^/]+/$",
+            "score": 85,
+            "description": "WooCommerce: /shop/{category}/{product}/"
+        },
+        {
+            "pattern": "/collections/[^/]+/products/[^/?]+",
+            "score": 85,
+            "description": "Shopify: /collections/{collection}/products/{product} (allows query params)"
+        },
+        {
+            "pattern": "/catalog/product/[^/?]+",
+            "score": 80,
+            "description": "Generic catalog: /catalog/product/{product} (allows query params)"
+        },
+        {
+            "pattern": "/shop/product/[^/?]+",
+            "score": 80,
+            "description": "Generic shop: /shop/product/{product} (allows query params)"
+        },
+        {
+            "pattern": "/store/product/[^/?]+",
+            "score": 80,
+            "description": "Generic store: /store/product/{product} (allows query params)"
+        },
+        {
+            "pattern": "/add-to-cart/[^/?]+",
+            "score": 75,
+            "description": "Add to cart: /add-to-cart/{product} (allows query params)"
+        },
+        {
+            "pattern": "/addtocart/[^/?]+",
+            "score": 75,
+            "description": "Add to cart: /addtocart/{product} (allows query params)"
+        },
+        {
+            "pattern": "/buy-now/[^/?]+",
+            "score": 75,
+            "description": "Buy now: /buy-now/{product} (allows query params)"
+        },
+        {
+            "pattern": "/order-now/[^/?]+",
+            "score": 75,
+            "description": "Order now: /order-now/{product} (allows query params)"
+        },
+        {
+            "pattern": "/quick-buy/[^/?]+",
+            "score": 75,
+            "description": "Quick buy: /quick-buy/{product} (allows query params)"
+        },
+        {
+            "pattern": "/quick-view/[^/?]+",
+            "score": 70,
+            "description": "Quick view: /quick-view/{product} (allows query params)"
+        },
+        {
+            "pattern": "/quick-look/[^/?]+",
+            "score": 70,
+            "description": "Quick look: /quick-look/{product} (allows query params)"
+        },
+        {
+            "pattern": "produkt",
+            "score": 60,
+            "description": "German product keyword"
+        },
+        {
+            "pattern": "product",
+            "score": 60,
+            "description": "English product keyword"
+        },
+        {
+            "pattern": "^/[^/]+/[^/]+/[^/?]+",
+            "score": 50,
+            "description": "Multi-level paths: /category/subcategory/product-name (allows query params)"
+        },
+        {
+            "pattern": "/collections/[^/?]+",
+            "score": 30,
+            "description": "Shopify: /collections/{collection-name} (allows query params)"
+        },
+        {
+            "pattern": "/product-category/[^/]+/$",
+            "score": 30,
+            "description": "WooCommerce: /product-category/{category-name}/"
+        },
+        {
+            "pattern": "/shop/[^/]+/$",
+            "score": 25,
+            "description": "WooCommerce: /shop/{category-name}/ (when not a product)"
+        },
+        {
+            "pattern": "/category/[^/?]+",
+            "score": 25,
+            "description": "Generic: /category/{category} (allows query params)"
+        },
+        {
+            "pattern": "/categories/[^/?]+",
+            "score": 25,
+            "description": "Generic: /categories/{category} (allows query params)"
+        },
+        {
+            "pattern": "/collection/[^/?]+",
+            "score": 25,
+            "description": "Generic: /collection/{collection} (allows query params)"
+        },
+        {
+            "pattern": "/department/[^/?]+",
+            "score": 20,
+            "description": "Generic: /department/{department} (allows query params)"
+        },
+        {
+            "pattern": "/departments/[^/?]+",
+            "score": 20,
+            "description": "Generic: /departments/{department} (allows query params)"
+        },
+        {
+            "pattern": "/brand/[^/?]+",
+            "score": 20,
+            "description": "Generic: /brand/{brand} (allows query params)"
+        },
+        {
+            "pattern": "/brands/[^/?]+",
+            "score": 20,
+            "description": "Generic: /brands/{brand} (allows query params)"
+        },
+        {
+            "pattern": "/tag/[^/?]+",
+            "score": 20,
+            "description": "Generic: /tag/{tag} (allows query params)"
+        },
+        {
+            "pattern": "/tags/[^/?]+",
+            "score": 20,
+            "description": "Generic: /tags/{tag} (allows query params)"
+        },
+        {
+            "pattern": "/kategorien",
+            "score": 25,
+            "description": "German: /kategorien/{category}"
+        },
+        {
+            "pattern": "/kategorie",
+            "score": 25,
+            "description": "German: /kategorie/{category}"
+        },
+        {
+            "pattern": "/marken/[^/?]+",
+            "score": 25,
+            "description": "German: /marken/{brand}"
+        },
+        {
+            "pattern": "/marke/[^/?]+",
+            "score": 25,
+            "description": "German: /marke/{brand}"
+        },
+        {
+            "pattern": "/fahrräder/[^/]+$",
+            "score": 25,
+            "description": "German: /fahrräder/{category} (2 levels)"
+        },
+        {
+            "pattern": "/fahrräder/[^/]+/[^/?]+$",
+            "score": 25,
+            "description": "German: /fahrräder/{category}/{subcategory} (3 levels)"
+        },
+        {
+            "pattern": "/bekleidung/[^/]+$",
+            "score": 25,
+            "description": "German: /bekleidung/{category} (2 levels)"
+        },
+        {
+            "pattern": "/bekleidung/[^/]+/[^/?]+$",
+            "score": 25,
+            "description": "German: /bekleidung/{category}/{subcategory} (3 levels)"
+        },
+        {
+            "pattern": "/fahrradteile/[^/]+$",
+            "score": 25,
+            "description": "German: /fahrradteile/{category} (2 levels)"
+        },
+        {
+            "pattern": "/fahrradteile/[^/]+/[^/?]+$",
+            "score": 25,
+            "description": "German: /fahrradteile/{category}/{subcategory} (3 levels)"
+        },
+        {
+            "pattern": "/fahrradzubehör/[^/]+$",
+            "score": 25,
+            "description": "German: /fahrradzubehör/{category} (2 levels)"
+        },
+        {
+            "pattern": "/fahrradzubehör/[^/]+/[^/?]+$",
+            "score": 25,
+            "description": "German: /fahrradzubehör/{category}/{subcategory} (3 levels)"
+        },
+        {
+            "pattern": "/artikel/[^/]+$",
+            "score": 25,
+            "description": "German: /artikel/{category} (2 levels)"
+        },
+        {
+            "pattern": "/artikel/[^/]+/[^/?]+$",
+            "score": 25,
+            "description": "German: /artikel/{category}/{subcategory} (3 levels)"
+        },
+        {
+            "pattern": "/waren/[^/]+$",
+            "score": 25,
+            "description": "German: /waren/{category} (2 levels)"
+        },
+        {
+            "pattern": "/waren/[^/]+/[^/?]+$",
+            "score": 25,
+            "description": "German: /waren/{category}/{subcategory} (3 levels)"
+        },
+        {
+            "pattern": "/womens/",
+            "score": 15,
+            "description": "Women's category"
+        },
+        {
+            "pattern": "/mens/",
+            "score": 15,
+            "description": "Men's category"
+        },
+        {
+            "pattern": "/kids/",
+            "score": 15,
+            "description": "Kids category"
+        },
+        {
+            "pattern": "/children/",
+            "score": 15,
+            "description": "Children category"
+        },
+        {
+            "pattern": "/electronics/",
+            "score": 15,
+            "description": "Electronics category"
+        },
+        {
+            "pattern": "/clothing/",
+            "score": 15,
+            "description": "Clothing category"
+        },
+        {
+            "pattern": "/shoes/",
+            "score": 15,
+            "description": "Shoes category"
+        },
+        {
+            "pattern": "/accessories/",
+            "score": 15,
+            "description": "Accessories category"
+        },
+        {
+            "pattern": "/home/",
+            "score": 15,
+            "description": "Home category"
+        },
+        {
+            "pattern": "/kitchen/",
+            "score": 15,
+            "description": "Kitchen category"
+        },
+        {
+            "pattern": "/garden/",
+            "score": 15,
+            "description": "Garden category"
+        },
+        {
+            "pattern": "/sports/",
+            "score": 15,
+            "description": "Sports category"
+        },
+        {
+            "pattern": "/outdoor/",
+            "score": 15,
+            "description": "Outdoor category"
+        },
+        {
+            "pattern": "/beauty/",
+            "score": 15,
+            "description": "Beauty category"
+        },
+        {
+            "pattern": "/health/",
+            "score": 15,
+            "description": "Health category"
+        },
+        {
+            "pattern": "/books/",
+            "score": 15,
+            "description": "Books category"
+        },
+        {
+            "pattern": "/toys/",
+            "score": 15,
+            "description": "Toys category"
+        },
+        {
+            "pattern": "/baby/",
+            "score": 15,
+            "description": "Baby category"
+        },
+        {
+            "pattern": "/pet/",
+            "score": 15,
+            "description": "Pet category"
+        },
+        {
+            "pattern": "/automotive/",
+            "score": 15,
+            "description": "Automotive category"
+        },
+        {
+            "pattern": "/jewelry/",
+            "score": 15,
+            "description": "Jewelry category"
+        },
+        {
+            "pattern": "/watches/",
+            "score": 15,
+            "description": "Watches category"
+        },
+        {
+            "pattern": "/bags/",
+            "score": 15,
+            "description": "Bags category"
+        },
+        {
+            "pattern": "/furniture/",
+            "score": 15,
+            "description": "Furniture category"
+        },
+        {
+            "pattern": "/decor/",
+            "score": 15,
+            "description": "Decor category"
+        },
+        {
+            "pattern": "/lighting/",
+            "score": 15,
+            "description": "Lighting category"
+        },
+        {
+            "pattern": "/bathroom/",
+            "score": 15,
+            "description": "Bathroom category"
+        },
+        {
+            "pattern": "/bedroom/",
+            "score": 15,
+            "description": "Bedroom category"
+        },
+        {
+            "pattern": "/living-room/",
+            "score": 15,
+            "description": "Living room category"
+        },
+        {
+            "pattern": "/dining/",
+            "score": 15,
+            "description": "Dining category"
+        },
+        {
+            "pattern": "/office/",
+            "score": 15,
+            "description": "Office category"
+        },
+        {
+            "pattern": "/gaming/",
+            "score": 15,
+            "description": "Gaming category"
+        },
+        {
+            "pattern": "/music/",
+            "score": 15,
+            "description": "Music category"
+        },
+        {
+            "pattern": "/art/",
+            "score": 15,
+            "description": "Art category"
+        },
+        {
+            "pattern": "/crafts/",
+            "score": 15,
+            "description": "Crafts category"
+        },
+        {
+            "pattern": "/damen/",
+            "score": 15,
+            "description": "German: Women's category"
+        },
+        {
+            "pattern": "/herren/",
+            "score": 15,
+            "description": "German: Men's category"
+        },
+        {
+            "pattern": "/kinder/",
+            "score": 15,
+            "description": "German: Kids category"
+        },
+        {
+            "pattern": "/elektronik/",
+            "score": 15,
+            "description": "German: Electronics category"
+        },
+        {
+            "pattern": "/kleidung/",
+            "score": 15,
+            "description": "German: Clothing category"
+        },
+        {
+            "pattern": "/schuhe/",
+            "score": 15,
+            "description": "German: Shoes category"
+        },
+        {
+            "pattern": "/accessoires/",
+            "score": 15,
+            "description": "German: Accessories category"
+        },
+        {
+            "pattern": "/zubehör/",
+            "score": 15,
+            "description": "German: Accessories category"
+        },
+        {
+            "pattern": "/haus/",
+            "score": 15,
+            "description": "German: Home category"
+        },
+        {
+            "pattern": "/küche/",
+            "score": 15,
+            "description": "German: Kitchen category"
+        },
+        {
+            "pattern": "/garten/",
+            "score": 15,
+            "description": "German: Garden category"
+        },
+        {
+            "pattern": "/sport/",
+            "score": 15,
+            "description": "German: Sports category"
+        },
+        {
+            "pattern": "/gesundheit/",
+            "score": 15,
+            "description": "German: Health category"
+        },
+        {
+            "pattern": "/bücher/",
+            "score": 15,
+            "description": "German: Books category"
+        },
+        {
+            "pattern": "/spielzeug/",
+            "score": 15,
+            "description": "German: Toys category"
+        },
+        {
+            "pattern": "/haustier/",
+            "score": 15,
+            "description": "German: Pet category"
+        },
+        {
+            "pattern": "/auto/",
+            "score": 15,
+            "description": "German: Auto category"
+        },
+        {
+            "pattern": "/schmuck/",
+            "score": 15,
+            "description": "German: Jewelry category"
+        },
+        {
+            "pattern": "/uhren/",
+            "score": 15,
+            "description": "German: Watches category"
+        },
+        {
+            "pattern": "/taschen/",
+            "score": 15,
+            "description": "German: Bags category"
+        },
+        {
+            "pattern": "/möbel/",
+            "score": 15,
+            "description": "German: Furniture category"
+        },
+        {
+            "pattern": "/dekoration/",
+            "score": 15,
+            "description": "German: Decor category"
+        },
+        {
+            "pattern": "/beleuchtung/",
+            "score": 15,
+            "description": "German: Lighting category"
+        },
+        {
+            "pattern": "/badezimmer/",
+            "score": 15,
+            "description": "German: Bathroom category"
+        },
+        {
+            "pattern": "/schlafzimmer/",
+            "score": 15,
+            "description": "German: Bedroom category"
+        },
+        {
+            "pattern": "/wohnzimmer/",
+            "score": 15,
+            "description": "German: Living room category"
+        },
+        {
+            "pattern": "/esszimmer/",
+            "score": 15,
+            "description": "German: Dining room category"
+        },
+        {
+            "pattern": "/büro/",
+            "score": 15,
+            "description": "German: Office category"
+        },
+        {
+            "pattern": "/musik/",
+            "score": 15,
+            "description": "German: Music category"
+        },
+        {
+            "pattern": "/kunst/",
+            "score": 15,
+            "description": "German: Art category"
+        },
+        {
+            "pattern": "/basteln/",
+            "score": 15,
+            "description": "German: Crafts category"
+        },
+        {
+            "pattern": "/about",
+            "score": -10,
+            "description": "About page"
+        },
+        {
+            "pattern": "/contact",
+            "score": -10,
+            "description": "Contact page"
+        },
+        {
+            "pattern": "/blog",
+            "score": -10,
+            "description": "Blog page"
+        },
+        {
+            "pattern": "/news",
+            "score": -10,
+            "description": "News page"
+        },
+        {
+            "pattern": "/help",
+            "score": -10,
+            "description": "Help page"
+        },
+        {
+            "pattern": "/support",
+            "score": -10,
+            "description": "Support page"
+        },
+        {
+            "pattern": "/faq",
+            "score": -10,
+            "description": "FAQ page"
+        },
+        {
+            "pattern": "/terms",
+            "score": -10,
+            "description": "Terms page"
+        },
+        {
+            "pattern": "/privacy",
+            "score": -10,
+            "description": "Privacy page"
+        },
+        {
+            "pattern": "/policy",
+            "score": -10,
+            "description": "Policy page"
+        },
+        {
+            "pattern": "/legal",
+            "score": -10,
+            "description": "Legal page"
+        },
+        {
+            "pattern": "/careers",
+            "score": -10,
+            "description": "Careers page"
+        },
+        {
+            "pattern": "/jobs",
+            "score": -10,
+            "description": "Jobs page"
+        },
+        {
+            "pattern": "/press",
+            "score": -10,
+            "description": "Press page"
+        },
+        {
+            "pattern": "/media",
+            "score": -10,
+            "description": "Media page"
+        },
+        {
+            "pattern": "/events",
+            "score": -10,
+            "description": "Events page"
+        },
+        {
+            "pattern": "/stores",
+            "score": -10,
+            "description": "Stores page"
+        },
+        {
+            "pattern": "/locations",
+            "score": -10,
+            "description": "Locations page"
+        },
+        {
+            "pattern": "/login",
+            "score": -10,
+            "description": "Login page"
+        },
+        {
+            "pattern": "/register",
+            "score": -10,
+            "description": "Register page"
+        },
+        {
+            "pattern": "/account",
+            "score": -10,
+            "description": "Account page"
+        },
+        {
+            "pattern": "/konto",
+            "score": -10,
+            "description": "German: Account page"
+        },
+        {
+            "pattern": "/cart",
+            "score": -10,
+            "description": "Cart page"
+        },
+        {
+            "pattern": "/checkout",
+            "score": -10,
+            "description": "Checkout page"
+        },
+        {
+            "pattern": "/wishlist",
+            "score": -10,
+            "description": "Wishlist page"
+        },
+        {
+            "pattern": "/compare",
+            "score": -10,
+            "description": "Compare page"
+        },
+        {
+            "pattern": "/search",
+            "score": -10,
+            "description": "Search page"
+        },
+        {
+            "pattern": "/robots",
+            "score": -10,
+            "description": "Robots.txt page"
+        },
+        {
+            "pattern": "/admin",
+            "score": -10,
+            "description": "Admin page"
+        },
+        {
+            "pattern": "/dashboard",
+            "score": -10,
+            "description": "Dashboard page"
+        },
+        {
+            "pattern": "/footer",
+            "score": -10,
+            "description": "Footer page"
+        },
+        {
+            "pattern": "/header",
+            "score": -10,
+            "description": "Header page"
+        },
+        {
+            "pattern": "/info",
+            "score": -10,
+            "description": "Info page"
+        },
+        {
+            "pattern": "/datenschutz",
+            "score": -10,
+            "description": "German: Privacy page"
+        },
+        {
+            "pattern": "/agb",
+            "score": -10,
+            "description": "German: Terms page"
+        },
+        {
+            "pattern": "/über",
+            "score": -10,
+            "description": "German: About page"
+        },
+        {
+            "pattern": "/kontakt",
+            "score": -10,
+            "description": "German: Contact page"
+        },
+        {
+            "pattern": "/hilfe",
+            "score": -10,
+            "description": "German: Help page"
+        },
+        {
+            "pattern": "/impressum",
+            "score": -10,
+            "description": "German: Legal notice page"
+        },
+        {
+            "pattern": "/rechtliches",
+            "score": -10,
+            "description": "German: Legal page"
+        },
+        {
+            "pattern": "/karriere",
+            "score": -10,
+            "description": "German: Careers page"
+        },
+        {
+            "pattern": "/presse",
+            "score": -10,
+            "description": "German: Press page"
+        },
+        {
+            "pattern": "/medien",
+            "score": -10,
+            "description": "German: Media page"
+        },
+        {
+            "pattern": "/filialen",
+            "score": -10,
+            "description": "German: Stores page"
+        },
+        {
+            "pattern": "/standorte",
+            "score": -10,
+            "description": "German: Locations page"
+        },
+        {
+            "pattern": "/anmelden",
+            "score": -10,
+            "description": "German: Login page"
+        },
+        {
+            "pattern": "/registrieren",
+            "score": -10,
+            "description": "German: Register page"
+        },
+        {
+            "pattern": "/warenkorb",
+            "score": -10,
+            "description": "German: Cart page"
+        },
+        {
+            "pattern": "/wunschliste",
+            "score": -10,
+            "description": "German: Wishlist page"
+        },
+        {
+            "pattern": "/vergleichen",
+            "score": -10,
+            "description": "German: Compare page"
+        },
+        {
+            "pattern": "/suche",
+            "score": -10,
+            "description": "German: Search page"
+        },
+        {
+            "pattern": "^/$",
+            "score": -10,
+            "description": "Root path (homepage)"
+        },
+        {
+            "pattern": "#",
+            "score": -10,
+            "description": "Anchors"
+        },
+        {
+            "pattern": "javascript:",
+            "score": -10,
+            "description": "JavaScript"
+        },
+        {
+            "pattern": "mailto:",
+            "score": -10,
+            "description": "Email links"
+        },
+        {
+            "pattern": "tel:",
+            "score": -10,
+            "description": "Phone links"
+        },
+        {
+            "pattern": "ftp:",
+            "score": -10,
+            "description": "FTP links"
+        },
+        {
+            "pattern": "file:",
+            "score": -10,
+            "description": "File links"
+        }
+    ],
+    "html_context_patterns": {
+        "high_value": {
+            "patterns": [
+                "product",
+                "product-card",
+                "product-item",
+                "product-tile",
+                "product-grid",
+                "product-list-item",
+                "product-info",
+                "product-details",
+                "product-detail",
+                "product-description",
+                "product-title",
+                "product-name",
+                "product-image",
+                "product-img",
+                "product-gallery",
+                "product-media",
+                "product-link",
+                "price",
+                "preis",
+                "produkt",
+                "product-price",
+                "current-price",
+                "sale-price",
+                "offer-price",
+                "discount",
+                "deal",
+                "add-to-cart",
+                "addtocart",
+                "buy-button",
+                "btn-buy",
+                "buy-now",
+                "add-to-basket",
+                "cart-button",
+                "reviews",
+                "rating",
+                "customer-reviews",
+                "product-rating",
+                "stars",
+                "feedback",
+                "pdp",
+                "€"
+            ],
+            "score": 100,
+            "description": "High-value product indicators (strong positive score)"
+        },
+        "category": {
+            "patterns": [
+                "category",
+                "categories",
+                "collection",
+                "collections",
+                "department",
+                "departments",
+                "section",
+                "sections",
+                "shop",
+                "store",
+                "catalog",
+                "browse"
+            ],
+            "score": 20,
+            "description": "Category indicators (slight positive score)"
+        },
+        "low_priority": {
+            "patterns": [
+                "about",
+                "contact",
+                "blog",
+                "news",
+                "help",
+                "support",
+                "faq",
+                "terms",
+                "privacy",
+                "policy",
+                "legal",
+                "careers",
+                "jobs",
+                "press",
+                "media",
+                "events",
+                "stores",
+                "locations",
+                "login",
+                "register",
+                "account",
+                "cart",
+                "checkout",
+                "wishlist",
+                "compare",
+                "search",
+                "robots",
+                "admin",
+                "dashboard",
+                "footer",
+                "header"
+            ],
+            "score": -10.0,
+            "description": "Low-priority indicators (negative score)"
+        }
+    }
+}

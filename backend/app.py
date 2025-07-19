@@ -1,5 +1,6 @@
 import os
 import json
+import requests
 from typing import Dict, Any, List, Optional
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,10 +14,11 @@ app = FastAPI(title="AI Product Analyzer API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_origins=["*"],  # Allow all origins for now
+    allow_credentials=False,  # Set to False when using wildcard origins
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Initialize ChatGPT Model
@@ -42,6 +44,9 @@ class ProductAnalysisResponse(BaseModel):
     conversion_tips: List[str]
     analysis: Optional[str] = None
     error: Optional[str] = None
+
+class URLRequest(BaseModel):
+    url: str
 
 class SchemaValidationRequest(BaseModel):
     schema_data: Dict[str, Any]
@@ -179,6 +184,101 @@ async def validate_schema(request: SchemaValidationRequest):
         return validation
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Schema validation failed: {str(e)}")
+
+@app.post("/scrape-and-analyze")
+async def scrape_and_analyze(request: URLRequest):
+    """Complete workflow: URL → Real Scraper → ChatGPT Analysis"""
+    print(f"\n🔄 RECEIVED SCRAPE REQUEST: {request.url}")
+    
+    try:
+        # Step 1: Use the real scraper to extract product data
+        print(f"🌐 Step 1: Scraping {request.url} with real scraper...")
+        
+        # Import scraper (do this here to avoid startup issues)
+        from scraper.main import scrape_domain
+        
+        # Call the real scraper
+        scraper_result = await scrape_domain(
+            domain_url=request.url,
+            headless=True,
+            max_products=10,  # Reasonable limit for analysis
+            delay=1.0,
+            min_jsonld_products=1  # At least 1 product required
+        )
+        
+        print(f"✅ Scraper completed! Found {len(scraper_result.get('product_schemas', []))} product schemas")
+        
+        # Extract products from scraped data 
+        products_data = scraper_result.get('product_schemas', [])
+        
+        if not products_data:
+            print("⚠️  No product data found by scraper")
+            return []
+        
+        # Step 2: Analyze with our existing ChatGPT pipeline
+        results = []
+        
+        for i, product in enumerate(products_data, 1):
+            try:
+                print(f"🔍 Analyzing scraped product {i}/{len(products_data)}: {product.get('name', 'Unknown')}")
+                
+                # Validate required fields
+                if not validate_schema_org_product(product):
+                    print(f"⚠️  Product {i} failed validation - skipping")
+                    continue
+                
+                # Analyze with ChatGPT (existing pipeline)
+                print(f"🤖 Sending scraped product {i} to ChatGPT for analysis...")
+                analysis = await chatgpt_model.analyze_product(product)
+                print(f"✅ ChatGPT analysis complete for product {i} - Score: {analysis.get('overall_score', 'N/A')}/100")
+                
+                # Convert to response model
+                response = ProductAnalysisResponse(**analysis)
+                results.append(response)
+                
+            except Exception as e:
+                print(f"❌ Error analyzing scraped product {i}: {str(e)}")
+                error_response = ProductAnalysisResponse(
+                    overall_score=0,
+                    strengths=[],
+                    weaknesses=["Analysis failed"],
+                    improvements=[],
+                    seo_recommendations=[],
+                    missing_fields=[],
+                    conversion_tips=[],
+                    error=str(e)
+                )
+                results.append(error_response)
+        
+        print(f"🎉 SCRAPE & ANALYSIS ARCHITECTURE COMPLETE: Returning {len(results)} analyses")
+        return results
+        
+    except Exception as e:
+        print(f"💥 FATAL ERROR in scrape-and-analyze: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Scrape and analysis failed: {str(e)}")
+
+@app.options("/scrape-and-analyze")
+async def scrape_options():
+    """Handle CORS preflight for scrape-and-analyze endpoint"""
+    print("🔧 OPTIONS request received for /scrape-and-analyze")
+    return {"message": "OK"}
+
+@app.middleware("http")
+async def cors_handler(request, call_next):
+    """Custom CORS middleware for debugging"""
+    print(f"🌐 Request: {request.method} {request.url}")
+    
+    if request.method == "OPTIONS":
+        print("🔧 Handling OPTIONS request")
+        from fastapi import Response
+        response = Response()
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        return response
+    
+    response = await call_next(request)
+    return response
 
 @app.get("/health")
 async def health_check():
