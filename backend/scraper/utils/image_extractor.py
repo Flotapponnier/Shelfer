@@ -316,12 +316,12 @@ class ProductImageExtractor:
             processed_images = self._process_extracted_images(image_data, product_name)
             
             logger.info(f"After processing images:")
-            logger.info(f"  Main image URL: {processed_images['images']['urlMainimage']}")
-            logger.info(f"  Other images count: {len(processed_images['images']['otherMainImages'])}")
-            logger.info(f"  Other image URLs: {processed_images['images']['otherMainImages']}")
+            logger.info(f"  Main image URL: {processed_images['images']['url_main_image']}")
+            logger.info(f"  Other images count: {len(processed_images['images']['other_images'])}")
+            logger.info(f"  Other image URLs: {processed_images['images']['other_images']}")
             # Also log for immediate visibility
-            logger.debug(f"ImageExtractor Extracted main image: {processed_images['images']['urlMainimage']}")
-            logger.debug(f"ImageExtractor Extracted other images: {processed_images['images']['otherMainImages']}")
+            logger.debug(f"ImageExtractor Extracted main image: {processed_images['images']['url_main_image']}")
+            logger.debug(f"ImageExtractor Extracted other images: {processed_images['images']['other_images']}")
             
             return processed_images
             
@@ -329,11 +329,11 @@ class ProductImageExtractor:
             logger.error(f"Failed to extract product images: {e}")
             return {
                 "images": {
-                    "urlMainimage": None,
-                    "otherMainImages": []
+                    "url_main_image": None,
+                    "other_images": []
                 },
-                "relevantHtmlProductContext": "",
-                "schema.org": None
+                "relevant_html_product_context": "",
+                "json_ld_schema": None
             }
     
     def _process_extracted_images(self, image_data: Dict, product_name: str = None) -> Dict[str, Any]:
@@ -398,11 +398,11 @@ class ProductImageExtractor:
         
         return {
             "images": {
-                "urlMainimage": main_image,
-                "otherMainImages": other_images
+                "url_main_image": main_image,
+                "other_images": other_images
             },
-            "relevantHtmlProductContext": html_context,
-            "schema.org": None  # Will be filled by the main scraper
+            "relevant_html_product_context": html_context,
+            "json_ld_schema": None  # Will be filled by the main scraper
         }
     
     def _get_best_image_url(self, img: Dict) -> Optional[str]:

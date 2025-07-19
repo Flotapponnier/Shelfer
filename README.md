@@ -5,6 +5,7 @@
 ### Prerequisites
 
 Make sure you have the following installed:
+
 - [uv](https://docs.astral.sh/uv/) (Python package manager)
 - [Node.js](https://nodejs.org/) (for frontend)
 - [Make](https://www.gnu.org/software/make/) (for build automation)
@@ -51,13 +52,16 @@ npm run dev
 ### Available Make Commands
 
 ```bash
-make help              # Show all available commands
-make backend-install   # Install backend dependencies
-make backend-run       # Run backend server
-make frontend-install  # Install frontend dependencies  
-make frontend-run      # Run frontend development server
-make kill-backend-port # Kill process on backend port
-make init              # Install all dependencies
+make help                     # Show all available commands
+make backend-install          # Install backend dependencies
+make backend-run              # Run backend server
+make frontend-install         # Install frontend dependencies
+make frontend-run             # Run frontend development server
+make kill-backend-port        # Kill process on backend port
+make init                     # Install all dependencies
+make test-html-extractor      # Run HTML extractor service test
+make test-image-extractor     # Run image extractor service test
+make test-all                 # Run all extractor service tests
 ```
 
 ## Product Brief
@@ -100,9 +104,14 @@ make init              # Install all dependencies
 │   └── package.json
 ├── backend/           # FastAPI Python backend
 │   ├── services/      # Core business logic
-│   │   └── html_extractor.py  # HTML context extraction service
+│   │   ├── html_extractor.py   # HTML context extraction service
+│   │   └── image_extractor.py  # Image analysis extraction service
 │   ├── schemas/       # Pydantic data models
 │   ├── prompts/       # AI prompt templates
+│   ├── tests/         # Test scripts and documentation
+│   │   ├── README.md               # Test instructions and results
+│   │   ├── test_image_extractor.py # Image extractor service test
+│   │   └── test_html_extractor.py  # HTML extractor service test
 │   ├── main.py        # API endpoints
 │   └── requirements.txt
 └── README.md
@@ -131,7 +140,7 @@ scraper_input = ScraperInput(
     json_ld_schema={"@type": "Product", "name": "..."}  # Optional existing schema
 )
 
-# Extract HTML contexts for all 23 target properties
+# Extract HTML contexts for all 22 target properties
 result = extractor.extract_html_contexts(scraper_input)
 
 # Output ready for enricher
@@ -142,9 +151,9 @@ print(f"Processed {len(result.html_contexts)} properties")
 
 ### Supported Properties
 
-The extractor identifies HTML contexts for 23 schema.org Product properties:
+The extractor identifies HTML contexts for 22 schema.org Product properties from HTML:
 
-**Core Properties:** `offers.price`, `offers.priceCurrency`, `offers.availability`, `description`, `image`, `brand`, `offers.itemCondition`
+**Core Properties:** `offers.price`, `offers.priceCurrency`, `offers.availability`, `description`, `brand`, `offers.itemCondition`
 
 **Product Details:** `color`, `material`, `size`, `category`, `keywords`, `manufacturer`, `audience`, `additionalType`
 
@@ -152,9 +161,12 @@ The extractor identifies HTML contexts for 23 schema.org Product properties:
 
 **Business Info:** `hasMerchantReturnPolicy`, `nsn`, `countryOfLastProcessing`, `isFamilyFriendly`
 
+**Note:** The `image` property requires separate image analysis and is not handled by this HTML extractor.
+
 ### Input/Output Format
 
 **Input Format:**
+
 ```json
 {
   "product_html": "<html>cleaned product page content</html>",
@@ -167,6 +179,7 @@ The extractor identifies HTML contexts for 23 schema.org Product properties:
 ```
 
 **Output Format:**
+
 ```json
 {
   "json_ld_schema": {...},
@@ -182,3 +195,227 @@ The extractor identifies HTML contexts for 23 schema.org Product properties:
 ```
 
 The output is designed to be directly consumed by the enricher component in the next stage of the pipeline.
+
+## Testing the Services
+
+Both extractor services include comprehensive test suites to validate functionality and demonstrate usage.
+
+### Quick Testing with Makefile
+
+```bash
+# Test HTML extraction (22 properties from product HTML)
+make test-html-extractor
+
+# Test image extraction (10 properties from product images)
+make test-image-extractor
+
+# Run both tests
+make test-all
+```
+
+### Manual Testing
+
+```bash
+# Test HTML extractor
+cd backend
+uv run python tests/test_html_extractor.py
+
+# Test image extractor
+cd backend
+uv run python tests/test_image_extractor.py
+```
+
+### Test Results Overview
+
+- **HTML Extractor**: 100% success rate (22/22 properties) extracting from rich product HTML
+- **Image Extractor**: 100% success rate (10/10 properties) analyzing product images with GPT-4o vision
+- **Combined Coverage**: 32 total schema.org properties across text and visual analysis
+
+For detailed test documentation, results, and troubleshooting, see [`backend/tests/README.md`](backend/tests/README.md).
+
+## Image Extractor Service
+
+The **Image Extractor Service** complements the HTML extractor by analyzing product images using GPT-4o vision model to extract visual schema.org properties that cannot be determined from HTML alone.
+
+### Usage
+
+```python
+from services.image_extractor import ImageExtractorService
+from schemas.product import ScraperInput, ProductImages
+
+# Initialize the service
+image_extractor = ImageExtractorService()
+
+# Prepare input data with product images
+scraper_input = ScraperInput(
+    product_html="<div>...</div>",  # Not used by image extractor
+    images=ProductImages(
+        url_main_image="https://example.com/product-main.jpg",
+        other_main_images=["https://example.com/variant1.jpg", "https://example.com/detail.jpg"]
+    ),
+    json_ld_schema={"@type": "Product", "name": "Product Name"}
+)
+
+# Extract visual properties from images
+result = image_extractor.extract_image_contexts(
+    scraper_input=scraper_input,
+    product_name="Product Name",
+    product_url="https://example.com/product"
+)
+
+# Output compatible with enricher
+print(f"Processed {len(result)} visual properties")
+# result is Dict[str, HtmlContext] with visual data extracted from images
+```
+
+### Supported Visual Properties
+
+The image extractor identifies 10 schema.org properties that can be determined from product images:
+
+**Visual Characteristics:** `color`, `material`, `size`
+
+**Product Information:** `image`, `brand`, `category`, `additionalType`
+
+**Quality Assessment:** `offers.itemCondition`, `positiveNotes`, `negativeNotes`
+
+### Features
+
+- **GPT-4o Vision Integration**: Uses OpenAI's most advanced vision model for accurate analysis
+- **Multi-Image Processing**: Analyzes main image first, then processes additional images for incomplete properties
+- **Safety Handling**: Detects and handles safety refusals with fallback prompts
+- **Error Resilience**: Gracefully handles invalid URLs, network issues, and processing errors
+- **Format Support**: Supports common image formats (JPG, PNG, GIF, BMP, WebP)
+
+### Input/Output Format
+
+**Input**: Same `ScraperInput` format as HTML extractor, but focuses on the `images` field
+
+**Output**: `Dict[str, HtmlContext]` where each property contains extracted visual information
+
+```json
+{
+  "color": {
+    "relevant_html_product_context": "Red with black accents"
+  },
+  "material": {
+    "relevant_html_product_context": "Premium leather with metal hardware"
+  },
+  "brand": {
+    "relevant_html_product_context": "Nike logo visible on product"
+  }
+}
+```
+
+### Integration with HTML Extractor
+
+Both services can be used together to provide comprehensive property extraction:
+
+```python
+from services.html_extractor import HtmlExtractorService
+from services.image_extractor import ImageExtractorService
+
+# Extract from both HTML and images
+html_contexts = html_extractor.extract_html_contexts(scraper_input)
+image_contexts = image_extractor.extract_image_contexts(scraper_input, product_name, product_url)
+
+# Combine results (32 total properties: 22 from HTML + 10 from images)
+all_contexts = {**html_contexts.html_contexts, **image_contexts}
+```
+
+## Enrichment Service
+
+The **Enrichment Service** takes the output from the HTML Extractor (or similar input) and uses LLMs to fill in schema.org Product properties, returning a comprehensive, enriched product schema.
+
+### Usage
+
+```python
+from enrichment.enricher import Enricher
+
+# Example input matching the expected format
+input_data = {
+    "json_ld_schema": {
+        "@context": "https://schema.org/",
+        "@type": "Product"
+    },
+    "html_contexts": {
+        "color": {
+            "relevant_html_product_context": "These stylish shorts are available in a vibrant blue, perfect for summer adventures.",
+            "product_name": "Test Backpack",
+            "product_url": "https://example.com/product/123"
+        },
+        "brand": {
+            "relevant_html_product_context": (
+                "This product is proudly made by Patagonia, a renowned outdoor apparel company known for its commitment to quality, sustainability, and environmental activism. "
+                "Patagonia products are designed for adventurers and outdoor enthusiasts who value durability, ethical manufacturing, and innovative design. "
+                "The brand is recognized worldwide for its responsible sourcing of materials and dedication to reducing environmental impact. "
+                "Choosing this product means supporting Patagonia's mission to create high-performance gear while protecting the planet."
+            ),
+            "product_name": "Test Backpack",
+            "product_url": "https://example.com/product/123"
+        },
+        "keywords": {
+            "relevant_html_product_context": """
+                <div>
+                    <h1>Test Backpack</h1>
+                    <p>
+                        The Test Backpack is designed for outdoor enthusiasts who love hiking, camping, and traveling.
+                        With its durable water-resistant material, multiple compartments for organization, and ergonomic padded straps,
+                        this backpack is perfect for long treks or daily commutes.
+                        Whether you're exploring mountain trails, heading to the gym, or packing for a weekend getaway,
+                        the Test Backpack offers versatility and comfort.
+                        <ul>
+                            <li>Spacious main compartment fits laptops up to 15 inches</li>
+                            <li>Side pockets for water bottles or snacks</li>
+                            <li>Reflective strips for safety during night hikes</li>
+                            <li>Available in blue, black, and green</li>
+                        </ul>
+                        <div class=\"promo-banner\">Limited time offer: Free shipping on all outdoor gear!</div>
+                        <footer>
+                            <span>Customer reviews: \"Perfect for hiking and travel!\"</span>
+                        </footer>
+                    </p>
+                </div>
+            """,
+            "product_name": "Test Backpack",
+            "product_url": "https://example.com/product/123"
+        }
+    }
+}
+
+result = Enricher.enrich(input_data)
+print(result)
+print("Enriched product data:", result.enriched_json_ld_schema)
+print("Original product data:", result.original_json_ld_schema)
+print("Not extracted properties:", result.not_extracted_properties)
+print("Finished:", result.finished)
+```
+
+### Output
+
+- `result.data`: The enriched schema.org Product dictionary
+- `result.not_extracted_properties`: List of properties that could not be extracted
+- `result.finished`: `True` if all properties were successfully extracted, else `False`
+
+### Input/Output Format
+
+**Input Format:**
+
+```json
+{
+  "json_ld_schema": { ... },
+  "html_contexts": {
+    "offers.price": {
+      "relevant_html_product_context": "<span class='price'>$29.99</span>"
+    },
+    "description": {
+      "relevant_html_product_context": "<div class='desc'>Product details...</div>"
+    }
+  }
+}
+```
+
+**Output:**
+
+- An `EnrichedProduct` object with `.data`, `.not_extracted_properties`, and `.finished` attributes.
+
+---

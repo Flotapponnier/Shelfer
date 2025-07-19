@@ -547,7 +547,7 @@ class MainProductDetector:
         availability = offers.get('availability', '')
         if availability:
             # Clean up schema.org URLs
-            if 'schema.org' in availability:
+            if 'json_ld_schema' in availability:
                 return availability.split('/')[-1].replace('_', ' ').title()
             return availability
         return None

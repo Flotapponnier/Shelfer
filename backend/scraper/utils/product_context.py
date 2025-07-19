@@ -63,13 +63,13 @@ async def scrapeProductContext(url: str, headless: bool = True, delay: float = 1
             schema_images = []
         # Deduplicate schema images
         schema_images = list(dict.fromkeys(schema_images))
-        data['schema.org'] = schema_images
+        data['json_ld_schema'] = schema_images
         imgs = data.get('images', {})
         # Override main image with first schema.org image if available
         if schema_images:
-            original_main = imgs.get('urlMainimage')
-            imgs['urlMainimage'] = schema_images[0]
-            other_images = imgs.get('otherMainImages') or []
+            original_main = imgs.get('url_main_image')
+            imgs['url_main_image'] = schema_images[0]
+            other_images = imgs.get('other_images') or []
             # Preserve original scraped main as alternate
             if original_main and original_main != schema_images[0] and original_main not in other_images:
                 other_images.insert(0, original_main)
@@ -77,18 +77,18 @@ async def scrapeProductContext(url: str, headless: bool = True, delay: float = 1
             for img_url in schema_images[1:]:
                 if img_url not in other_images:
                     other_images.append(img_url)
-            imgs['otherMainImages'] = other_images
+            imgs['other_images'] = other_images
         await page.close()
         imgs = data.get('images', {})
-        html_ctx = data.get('relevantHtmlProductContext', '')
+        html_ctx = data.get('relevant_html_product_context', '')
         # Log for backend visibility
-        logger.debug(f"ProductContext urlMainimage: {imgs.get('urlMainimage')}")
-        logger.debug(f"ProductContext otherMainImages: {imgs.get('otherMainImages')}")
+        logger.debug(f"ProductContext url_main_image: {imgs.get('url_main_image')}")
+        logger.debug(f"ProductContext other_images: {imgs.get('other_images')}")
         # Return scraped product context
         return {
-            'relevantHtmlProductContext': html_ctx,
+            'relevant_html_product_context': html_ctx,
             'images': imgs,
-            'schema.org': schema_images
+            'json_ld_schema': schema_images
         }
 
 # Backward compatibility wrapper
