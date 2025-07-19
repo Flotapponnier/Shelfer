@@ -6,7 +6,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from models.chatgpt import ChatGPTModel
+from openai_client import OpenAIClient
 
 load_dotenv()
 
@@ -21,8 +21,8 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
-# Initialize ChatGPT Model
-chatgpt_model = ChatGPTModel()
+# Initialize OpenAI Client
+openai_client = OpenAIClient()
 
 class ComparisonRequest(BaseModel):
     products: List[Dict[str, Any]]
@@ -279,6 +279,25 @@ async def cors_handler(request, call_next):
     
     response = await call_next(request)
     return response
+
+@app.post("/scrape-product-context")
+async def scrape_product_context_endpoint(request: URLRequest):
+    """Scraper endpoint: returns only HTML context and image URLs for a product page"""
+    print(f"\n🔍 SCRAPING PRODUCT CONTEXT: {request.url}")
+    try:
+        from scraper.utils.product_context import scrapeProductContext
+        result = await scrapeProductContext(request.url)
+        # Log result for backend visibility
+        images = result.get('images', {})
+        print(f"[API] scrape-product-context images.urlMainimage: {images.get('urlMainimage')}")
+        print(f"[API] scrape-product-context images.otherMainImages: {images.get('otherMainImages')}")
+        html_ctx = result.get('relevantHtmlProductContext', '')
+        html_preview = html_ctx if len(html_ctx) < 200 else html_ctx[:200] + '...'
+        print(f"[API] scrape-product-context relevantHtmlProductContext: {html_preview}")
+        return result
+    except Exception as e:
+        print(f"💥 PRODUCT CONTEXT SCRAPE ERROR: {e}")
+        raise HTTPException(status_code=500, detail=f"Error scraping product context: {e}")
 
 @app.get("/health")
 async def health_check():
