@@ -13,16 +13,18 @@ logger = logging.getLogger(__name__)
 class HtmlExtractorService:
     """
     Service that extracts relevant HTML contexts for schema.org properties
-    from scraped product data using OpenAI.
+    from scraped product HTML using OpenAI.
+    
+    Focus: HTML-only extraction. Image analysis is handled separately.
     """
     
-    # Target schema.org properties for extraction
+    # Target schema.org properties for HTML extraction
+    # Note: "image" property is handled separately by image analysis service
     TARGET_PROPERTIES = [
         "offers.price",
         "offers.priceCurrency",
         "offers.availability",
         "description",
-        "image",
         "brand",
         "offers.itemCondition",
         "color",
@@ -48,13 +50,15 @@ class HtmlExtractorService:
     
     def extract_html_contexts(self, scraper_input: ScraperInput) -> ExtractorOutput:
         """
-        Main method to extract relevant HTML contexts for each target property.
+        Main method to extract relevant HTML contexts for each target property from HTML only.
         
         Args:
-            scraper_input: Input from the scraper containing product_html, images, and optional json_ld_schema
+            scraper_input: Input from the scraper containing product_html, images (not processed yet), 
+                          and optional json_ld_schema
             
         Returns:
-            ExtractorOutput: Formatted output containing json_ld_schema and html_contexts for each property
+            ExtractorOutput: Formatted output containing json_ld_schema and html_contexts for each property.
+                           Note: Images are not processed in this service - handled separately.
         """
         try:
             logger.info(f"Starting HTML extraction for {len(self.TARGET_PROPERTIES)} properties")
