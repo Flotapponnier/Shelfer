@@ -79,7 +79,8 @@ async def scrapeProductContext(url: str, headless: bool = True, delay: float = 1
                     other_images.append(img_url)
             imgs['other_images'] = other_images
         await page.close()
-        imgs = data.get('images', {})
+        
+        # Use the processed imgs (don't overwrite with original data!)
         html_ctx = data.get('relevant_html_product_context', '')
         # Log for backend visibility
         logger.debug(f"ProductContext url_main_image: {imgs.get('url_main_image')}")
