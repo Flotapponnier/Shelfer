@@ -52,15 +52,12 @@ export default function ProductDataEnrichment({ data }: { data: Product }) {
 	};
 
 	return (
-		<div className="min-h-screen bg-gray-50 p-6">
-			<div className="max-w-7xl mx-auto">
+		<div className="min-h-screen">
+			<div className="mx-auto w-full">
 				{/* Main Heading */}
 				<div className="text-center mb-8">
-					<h1 className="text-4xl font-bold text-gray-900 mb-2">
-						Product Data Enrichment
-					</h1>
 					<p className="text-lg text-gray-600">
-						Transform your product data with AI-powered enrichment
+						Approve and edit the enriched product data here
 					</p>
 				</div>
 
@@ -111,12 +108,7 @@ export default function ProductDataEnrichment({ data }: { data: Product }) {
 
 				{/* Action Buttons */}
 				<div className="flex justify-center gap-4 mt-8">
-					<button className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
-						Upload Data
-					</button>
-					<button className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">
-						Start Enrichment
-					</button>
+
 					<button
 						onClick={resetValidation}
 						className="px-6 py-3 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
