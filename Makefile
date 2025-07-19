@@ -61,9 +61,6 @@ frontend-run:
 # Install all dependencies (backend & frontend)
 init: backend-install frontend-install 
 
-fetch_schema:
-	cd backend && python scripts/fetch_product_schema.py
-
 # Run HTML extractor service test
 test-html-extractor:
 	cd backend && uv run python tests/test_html_extractor.py
