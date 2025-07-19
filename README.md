@@ -5,6 +5,7 @@
 ### Prerequisites
 
 Make sure you have the following installed:
+
 - [uv](https://docs.astral.sh/uv/) (Python package manager)
 - [Node.js](https://nodejs.org/) (for frontend)
 - [Make](https://www.gnu.org/software/make/) (for build automation)
@@ -54,7 +55,7 @@ npm run dev
 make help              # Show all available commands
 make backend-install   # Install backend dependencies
 make backend-run       # Run backend server
-make frontend-install  # Install frontend dependencies  
+make frontend-install  # Install frontend dependencies
 make frontend-run      # Run frontend development server
 make kill-backend-port # Kill process on backend port
 make init              # Install all dependencies
@@ -131,7 +132,7 @@ scraper_input = ScraperInput(
     json_ld_schema={"@type": "Product", "name": "..."}  # Optional existing schema
 )
 
-# Extract HTML contexts for all 23 target properties
+# Extract HTML contexts for all 22 target properties
 result = extractor.extract_html_contexts(scraper_input)
 
 # Output ready for enricher
@@ -142,9 +143,9 @@ print(f"Processed {len(result.html_contexts)} properties")
 
 ### Supported Properties
 
-The extractor identifies HTML contexts for 23 schema.org Product properties:
+The extractor identifies HTML contexts for 22 schema.org Product properties from HTML:
 
-**Core Properties:** `offers.price`, `offers.priceCurrency`, `offers.availability`, `description`, `image`, `brand`, `offers.itemCondition`
+**Core Properties:** `offers.price`, `offers.priceCurrency`, `offers.availability`, `description`, `brand`, `offers.itemCondition`
 
 **Product Details:** `color`, `material`, `size`, `category`, `keywords`, `manufacturer`, `audience`, `additionalType`
 
@@ -152,9 +153,12 @@ The extractor identifies HTML contexts for 23 schema.org Product properties:
 
 **Business Info:** `hasMerchantReturnPolicy`, `nsn`, `countryOfLastProcessing`, `isFamilyFriendly`
 
+**Note:** The `image` property requires separate image analysis and is not handled by this HTML extractor.
+
 ### Input/Output Format
 
 **Input Format:**
+
 ```json
 {
   "product_html": "<html>cleaned product page content</html>",
@@ -167,6 +171,7 @@ The extractor identifies HTML contexts for 23 schema.org Product properties:
 ```
 
 **Output Format:**
+
 ```json
 {
   "json_ld_schema": {...},
@@ -219,11 +224,11 @@ input_data = {
                 <div>
                     <h1>Test Backpack</h1>
                     <p>
-                        The Test Backpack is designed for outdoor enthusiasts who love hiking, camping, and traveling. 
-                        With its durable water-resistant material, multiple compartments for organization, and ergonomic padded straps, 
-                        this backpack is perfect for long treks or daily commutes. 
-                        Whether you're exploring mountain trails, heading to the gym, or packing for a weekend getaway, 
-                        the Test Backpack offers versatility and comfort. 
+                        The Test Backpack is designed for outdoor enthusiasts who love hiking, camping, and traveling.
+                        With its durable water-resistant material, multiple compartments for organization, and ergonomic padded straps,
+                        this backpack is perfect for long treks or daily commutes.
+                        Whether you're exploring mountain trails, heading to the gym, or packing for a weekend getaway,
+                        the Test Backpack offers versatility and comfort.
                         <ul>
                             <li>Spacious main compartment fits laptops up to 15 inches</li>
                             <li>Side pockets for water bottles or snacks</li>
@@ -251,6 +256,7 @@ print("Finished:", result.finished)
 ```
 
 ### Output
+
 - `result.data`: The enriched schema.org Product dictionary
 - `result.not_extracted_properties`: List of properties that could not be extracted
 - `result.finished`: `True` if all properties were successfully extracted, else `False`
@@ -258,6 +264,7 @@ print("Finished:", result.finished)
 ### Input/Output Format
 
 **Input Format:**
+
 ```json
 {
   "json_ld_schema": { ... },
@@ -273,6 +280,7 @@ print("Finished:", result.finished)
 ```
 
 **Output:**
+
 - An `EnrichedProduct` object with `.data`, `.not_extracted_properties`, and `.finished` attributes.
 
 ---

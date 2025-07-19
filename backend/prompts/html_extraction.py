@@ -33,7 +33,6 @@ PROPERTY_DESCRIPTIONS = {
     "offers.priceCurrency": "The currency used for the product price (e.g., USD, EUR, GBP)",
     "offers.availability": "The availability status of the product (in stock, out of stock, limited availability, etc.)",
     "description": "The product description, features, specifications, and detailed information about the product",
-    "image": "Product images, including main images, gallery images, zoom images, and image URLs",
     "brand": "The brand or manufacturer name of the product",
     "offers.itemCondition": "The condition of the product (new, used, refurbished, damaged, etc.)",
     "color": "The color or colors available for the product",
