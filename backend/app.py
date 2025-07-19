@@ -194,10 +194,10 @@ async def get_product_context(productUrl: str):
     
     # Ensure exact format: { relevantHtmlProductContext, images: { urlMainimage, otherMainImages }, schema.org }
     return {
-        "relevantHtmlProductContext": result.get('relevantHtmlProductContext', ''),
+        "relevant_html_product_context": result.get('relevantHtmlProductContext', ''),
         "images": {
-            "urlMainimage": result.get('images', {}).get('urlMainimage', ''),
-            "otherMainImages": result.get('images', {}).get('otherMainImages', [])
+            "url_main_image": result.get('images', {}).get('urlMainimage', ''),
+            "other_images": result.get('images', {}).get('otherMainImages', [])
         },
         "schema.org": result.get('schema.org', None)
     }
@@ -206,55 +206,32 @@ async def get_product_context(productUrl: str):
 async def enrich_product_schema(request: URLRequest):
     """Product enrichment endpoint: URL → scrapeProductContext → enrichment pipeline"""
     print(f"\n🔄 RECEIVED ENRICHMENT REQUEST: {request.url}")
-    
+
     try:
         print(f"🌐 Step 1: Extracting product context from {request.url}...")
-        
+
         # Call helper function to get product context
         productContext = await get_product_context(request.url)
-        
-        # Log the results with enhanced HTML context analysis
-        print(f"[API] enrich-product-schema urlMainimage: {productContext['images']['urlMainimage']}")
-        print(f"[API] enrich-product-schema otherMainImages: {productContext['images']['otherMainImages']}")
-        
-        # Enhanced HTML context logging
-        html_context = productContext['relevantHtmlProductContext']
-        print(f"[API] 🔍 HTML CONTEXT ANALYSIS:")
-        print(f"    📏 Total length: {len(html_context)} characters")
-        
-        if html_context:
-            # Count different types of content
-            import re
-            title_count = len(re.findall(r'<h[1-6][^>]*>', html_context, re.IGNORECASE))
-            price_count = len(re.findall(r'(price|cost|currency|\$|€|£)', html_context, re.IGNORECASE))
-            desc_count = len(re.findall(r'(description|detail|specification|feature)', html_context, re.IGNORECASE))
-            brand_count = len(re.findall(r'(brand|manufacturer|maker)', html_context, re.IGNORECASE))
-            
-            print(f"    🏷️  Title elements: {title_count}")
-            print(f"    💰 Price indicators: {price_count}")
-            print(f"    📝 Description indicators: {desc_count}")
-            print(f"    🏭 Brand indicators: {brand_count}")
-            
-            # Show the FULL HTML context for debugging
-            print(f"    📋 FULL HTML CONTEXT:")
-            print(f"{'='*80}")
-            print(html_context)
-            print(f"{'='*80}")
-        else:
-            print(f"    ⚠️  No HTML context extracted!")
-        print(f"[API] ===============================================")
-        
+
+        # Log the results
+        print(f"[API] enrich-product-schema url_main_image: {productContext['images']['url_main_image']}")
+        print(f"[API] enrich-product-schema other_images: {productContext['images']['other_images']}")
+        # Print full HTML context
+        html_context = productContext.get('relevant_html_product_context', '')
+        print(f"[API] enrich-product-schema relevant_html_product_context:")
+        print(html_context)
+
         # TODO: Add enrichment pipeline here - for now return scraper result
         # This is where HTML extractor and enricher would be called
         print(f"🧠 Step 2: AI enrichment pipeline (TODO - returning raw scraper data for now)")
-        
+
         # Return the product context (enrichment pipeline will be added later)
         return {
             "url": request.url,
             "status": "success",
             "productContext": productContext
         }
-        
+
     except Exception as e:
         print(f"💥 FATAL ERROR in enrich-product-schema: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Product enrichment failed: {str(e)}")
