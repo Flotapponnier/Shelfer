@@ -31,7 +31,7 @@ class Enricher:
         not_extracted = []
         for prop, ctx in html_contexts.items():
             context = PropertyContext(
-                relevantHtmlProductContext=ctx.get('relevant_html_product_context'),
+                relevant_html_product_context=ctx.get('relevant_html_product_context'),
                 productName=ctx.get('product_name'),
                 productUrl=ctx.get('product_url')
             )
@@ -39,7 +39,7 @@ class Enricher:
                 property=prop,
                 product_name=context.productName or "",
                 product_url=context.productUrl or "",
-                html=context.relevantHtmlProductContext or ""
+                html=context.relevant_html_product_context or ""
             )
             llm_result = Enricher._call_llm_for_property(prompt)
             value = llm_result.get(prop) if isinstance(llm_result, dict) else llm_result

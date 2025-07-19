@@ -2,7 +2,7 @@ from typing import Optional, Dict, Any, List
 from pydantic import BaseModel
 
 class PropertyContext(BaseModel):
-    relevantHtmlProductContext: Optional[str]
+    relevant_html_product_context: Optional[str]
     relevantJsonLdSchema: Optional[Dict[str, Any]] = None
     productName: Optional[str] = None
     productUrl: Optional[str] = None
