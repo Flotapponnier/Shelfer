@@ -182,3 +182,97 @@ The extractor identifies HTML contexts for 23 schema.org Product properties:
 ```
 
 The output is designed to be directly consumed by the enricher component in the next stage of the pipeline.
+
+## Enrichment Service
+
+The **Enrichment Service** takes the output from the HTML Extractor (or similar input) and uses LLMs to fill in schema.org Product properties, returning a comprehensive, enriched product schema.
+
+### Usage
+
+```python
+from enrichment.enricher import Enricher
+
+# Example input matching the expected format
+input_data = {
+    "json_ld_schema": {
+        "@context": "https://schema.org/",
+        "@type": "Product"
+    },
+    "html_contexts": {
+        "color": {
+            "relevant_html_product_context": "These stylish shorts are available in a vibrant blue, perfect for summer adventures.",
+            "product_name": "Test Backpack",
+            "product_url": "https://example.com/product/123"
+        },
+        "brand": {
+            "relevant_html_product_context": (
+                "This product is proudly made by Patagonia, a renowned outdoor apparel company known for its commitment to quality, sustainability, and environmental activism. "
+                "Patagonia products are designed for adventurers and outdoor enthusiasts who value durability, ethical manufacturing, and innovative design. "
+                "The brand is recognized worldwide for its responsible sourcing of materials and dedication to reducing environmental impact. "
+                "Choosing this product means supporting Patagonia's mission to create high-performance gear while protecting the planet."
+            ),
+            "product_name": "Test Backpack",
+            "product_url": "https://example.com/product/123"
+        },
+        "keywords": {
+            "relevant_html_product_context": """
+                <div>
+                    <h1>Test Backpack</h1>
+                    <p>
+                        The Test Backpack is designed for outdoor enthusiasts who love hiking, camping, and traveling. 
+                        With its durable water-resistant material, multiple compartments for organization, and ergonomic padded straps, 
+                        this backpack is perfect for long treks or daily commutes. 
+                        Whether you're exploring mountain trails, heading to the gym, or packing for a weekend getaway, 
+                        the Test Backpack offers versatility and comfort. 
+                        <ul>
+                            <li>Spacious main compartment fits laptops up to 15 inches</li>
+                            <li>Side pockets for water bottles or snacks</li>
+                            <li>Reflective strips for safety during night hikes</li>
+                            <li>Available in blue, black, and green</li>
+                        </ul>
+                        <div class=\"promo-banner\">Limited time offer: Free shipping on all outdoor gear!</div>
+                        <footer>
+                            <span>Customer reviews: \"Perfect for hiking and travel!\"</span>
+                        </footer>
+                    </p>
+                </div>
+            """,
+            "product_name": "Test Backpack",
+            "product_url": "https://example.com/product/123"
+        }
+    }
+}
+
+result = Enricher.enrich(input_data)
+print(result)
+print("Enriched product data:", result.data)
+print("Not extracted properties:", result.not_extracted_properties)
+print("Finished:", result.finished)
+```
+
+### Output
+- `result.data`: The enriched schema.org Product dictionary
+- `result.not_extracted_properties`: List of properties that could not be extracted
+- `result.finished`: `True` if all properties were successfully extracted, else `False`
+
+### Input/Output Format
+
+**Input Format:**
+```json
+{
+  "json_ld_schema": { ... },
+  "html_contexts": {
+    "offers.price": {
+      "relevant_html_product_context": "<span class='price'>$29.99</span>"
+    },
+    "description": {
+      "relevant_html_product_context": "<div class='desc'>Product details...</div>"
+    }
+  }
+}
+```
+
+**Output:**
+- An `EnrichedProduct` object with `.data`, `.not_extracted_properties`, and `.finished` attributes.
+
+---
