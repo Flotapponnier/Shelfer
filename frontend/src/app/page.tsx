@@ -3,21 +3,21 @@
 import { useState } from "react";
 
 export default function Home() {
-  const [file, setFile] = useState<File | null>(null);
+  const [url, setUrl] = useState<string>("");
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   const analyzeProducts = async () => {
-    if (!file) return;
+    if (!url.trim()) return;
     
     setLoading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      
-      const response = await fetch("http://localhost:8000/analyze", {
+      const response = await fetch("http://localhost:8000/scrape-and-analyze", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: url.trim() }),
       });
       
       if (!response.ok) {
@@ -34,12 +34,16 @@ export default function Home() {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile && selectedFile.type === "application/json") {
-      setFile(selectedFile);
-    } else {
-      alert("Please select a valid JSON file");
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUrl(e.target.value);
+  };
+
+  const isValidUrl = (string: string) => {
+    try {
+      new URL(string);
+      return true;
+    } catch (_) {
+      return false;
     }
   };
 
@@ -51,7 +55,7 @@ export default function Home() {
             AI Product Analyzer
           </h1>
           <p className="text-xl text-gray-600">
-            Upload schema.org product data and get AI-powered optimization recommendations
+            Enter a product URL to scrape and analyze with AI-powered recommendations
           </p>
         </div>
 
@@ -59,21 +63,25 @@ export default function Home() {
           <div className="space-y-4 mb-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Upload Product Data (JSON)
+                Product URL
               </label>
               <input
-                type="file"
-                accept=".json"
-                onChange={handleFileChange}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                type="url"
+                value={url}
+                onChange={handleUrlChange}
+                placeholder="https://example.com/product-page"
+                className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
+              {url.trim() && !isValidUrl(url.trim()) && (
+                <p className="mt-1 text-sm text-red-600">Please enter a valid URL</p>
+              )}
             </div>
             <button
               onClick={analyzeProducts}
-              disabled={loading || !file}
+              disabled={loading || !url.trim() || !isValidUrl(url.trim())}
               className="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? "Analyzing..." : "Analyze Products"}
+              {loading ? "Scraping & Analyzing..." : "Scrape & Analyze"}
             </button>
           </div>
 
@@ -174,7 +182,7 @@ export default function Home() {
         </div>
 
         <div className="text-center text-gray-500">
-          <p>Powered by AI-driven product analysis using ChatGPT</p>
+          <p>Powered by AI-driven product analysis using ChatGPT and web scraping</p>
         </div>
       </div>
     </div>
