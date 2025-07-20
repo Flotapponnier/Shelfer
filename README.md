@@ -543,4 +543,83 @@ The scraper output feeds directly into the extraction pipeline:
 
 This dual-approach ensures reliable product data extraction across diverse e-commerce platforms, from simple HTML sites to complex JavaScript-heavy stores.
 
+## Scraper Core Components
+
+The scraper operates through 3 main components that work together to extract comprehensive product data:
+
+### 1. Schema.org Parsing & Product Prediction
+
+**Purpose**: Discovers and validates existing structured data on product pages.
+
+**Algorithm**:
+```python
+# Extract JSON-LD scripts from page
+jsonld_scripts = await JSONLDExtractor().extract_jsonld_from_page(page)
+parsed = parse_json_ld_scripts(jsonld_scripts)
+schema_images = [o for o in parsed if _is_product_schema(o)]
+```
+
+**Product Prediction Logic** (`_is_product_schema`):
+1. **Primary Check**: Looks for `@type: "Product"` in JSON-LD objects
+2. **Type Validation**: Handles string, list, and URL format types (`http://schema.org/product`)
+3. **Fallback Prediction**: Analyzes product-specific fields like `offers`, `sku`, `mpn`, `gtin13`
+4. **Pattern Detection**: Validates common product patterns (`name` + `offers` combination)
+
+**What it extracts**: Complete schema.org Product objects with properties like name, price, description, brand, offers, images, etc.
+
+### 2. Main Product Image Extraction
+
+**Purpose**: Identifies the primary product image using intelligent CSS selectors and quality assessment.
+
+**Selector Strategy**:
+```python
+main_image_selectors = [
+    '.product-image-main img',     # Dedicated main containers
+    '.product-hero img',           # Hero/banner images  
+    '.featured-image img',         # Featured displays
+    '[data-main-image] img',       # Data attribute marked
+    '.product-cover img'           # Cover images
+]
+```
+
+**Quality Assessment**:
+- **Resolution Priority**: Extracts highest quality from `<picture>` srcsets
+- **Lazy Loading**: Handles `data-src`, `data-srcset` attributes
+- **Quality Keywords**: Prioritizes images with indicators like `large`, `original`, `zoom`
+
+**Output**: Single main product image URL optimized for quality and relevance.
+
+### 3. Other Images (Gallery) Extraction
+
+**Purpose**: Collects additional product images from galleries, thumbnails, and related image sets.
+
+**Discovery Method**:
+```python
+thumbnail_selectors = [
+    '.product-thumbnails img', '.product-thumbs img',
+    '.image-gallery img', '.product-images-thumbs img', 
+    '.thumbnail img', '.gallery-thumb img'
+]
+```
+
+**Processing**:
+- **Gallery Containers**: Searches product image containers and carousels
+- **Thumbnail Resolution**: Follows thumbnail links to discover full-size versions  
+- **Deduplication**: Removes duplicates and variants of the same image
+- **Schema Integration**: Merges with schema.org images when available
+
+**Output**: Array of additional product images for comprehensive visual representation.
+
+## Scraper's Role in Project
+
+The scraper serves as the **data foundation layer** that feeds into the AI enrichment pipeline:
+
+**Input**: Product URLs → **Scraper** → **Output**: Structured data
+- `raw_page_text`: Clean text for AI analysis
+- `relevant_html_product_context`: OpenAI JSON or HTML fallback
+- `images`: {main image + other images array}  
+- `json_ld_schema`: Discovered schema.org objects
+
+This structured output then flows to the **Extractor Service** (22 HTML properties + 10 image properties) and **Enricher** (final schema.org generation).
+
 ---
