@@ -52,7 +52,6 @@ Working URLs:
 
 - https://teeshop-berlin.de/products/florapharm-pink-lemonade
 - https://www.honest-rare.de/en/piranja-limo-woodruff-lime/
--
 
 ## Quick Start
 
