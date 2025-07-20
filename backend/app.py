@@ -58,6 +58,10 @@ async def enrich_product_schema(request: URLRequest):
         # Debug: Log the raw scraper result
         print(f"🔍 DEBUG: Raw scraper result keys: {list(scraper_result.keys()) if scraper_result else 'None'}")
         print(f"🔍 DEBUG: Raw scraper result: {scraper_result}")
+        # Debug raw cleaned HTML before LLM pass
+        raw_html = scraper_result.get('raw_clean_html', '')
+        print(f"🔍 DEBUG: Raw cleaned section length: {len(raw_html)}")
+        print(f"🔍 DEBUG: Raw cleaned section snippet: {raw_html[:200]}")
         
         # Format scraped data for extractor service
         scraped_data = {
@@ -72,9 +76,9 @@ async def enrich_product_schema(request: URLRequest):
         # Log the scraped results
         print(f"[API] enrich-product-schema url_main_image: {scraped_data['images']['url_main_image']}")
         print(f"[API] enrich-product-schema other_images: {scraped_data['images']['other_images']}")
-        preview = scraped_data.get('product_html', '')
-        preview = preview if len(preview) < 200 else preview[:200] + '...'
-        print(f"[API] enrich-product-schema product_html: {preview}")
+        # Print full product_html (JSON summary) without truncation
+        full_html = scraped_data.get('product_html', '')
+        print(f"[API] enrich-product-schema product_html: {full_html}")
         
         print(f"✅ Scraped data obtained successfully")
         
