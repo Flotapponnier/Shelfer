@@ -72,9 +72,13 @@ async def enrich_product_schema(request: URLRequest):
         # Log the scraped results
         print(f"[API] enrich-product-schema url_main_image: {scraped_data['images']['url_main_image']}")
         print(f"[API] enrich-product-schema other_images: {scraped_data['images']['other_images']}")
-        preview = scraped_data.get('product_html', '')
-        preview = preview if len(preview) < 200 else preview[:200] + '...'
-        print(f"[API] enrich-product-schema product_html: {preview}")
+        
+        # Debug: Print full product_html content without truncation
+        full_product_html = scraped_data.get('product_html', '')
+        print(f"[API] DEBUG - Full product_html length: {len(full_product_html)}")
+        print(f"[API] DEBUG - Full product_html content:")
+        print(f"{full_product_html}")
+        print(f"[API] DEBUG - End of full product_html")
         
         print(f"✅ Scraped data obtained successfully")
         
