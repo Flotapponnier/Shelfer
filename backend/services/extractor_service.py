@@ -137,10 +137,12 @@ class ExtractorService:
             logger.debug(f"🔍 ExtractorService product_html length: {len(product_html)} chars")
             logger.debug(f"🔍 ExtractorService product_html preview: {product_html[:200] if product_html else 'EMPTY!'}")
             
-            # Handle json_ld_schema: convert empty list to None, ensure it's a dict or None
+            # Handle json_ld_schema: support both dict and list formats
             raw_json_ld = scraped_data.get("json_ld_schema")
             if isinstance(raw_json_ld, list) and len(raw_json_ld) == 0:
                 json_ld_schema = None
+            elif isinstance(raw_json_ld, list) and len(raw_json_ld) > 0:
+                json_ld_schema = raw_json_ld  # Keep the list of schemas
             elif isinstance(raw_json_ld, dict):
                 json_ld_schema = raw_json_ld
             else:

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Union
 
 class ProductUploadRequest(BaseModel):
     filename: str
@@ -43,11 +43,11 @@ class ProductImages(BaseModel):
 class ScraperInput(BaseModel):
     product_html: str
     images: ProductImages
-    json_ld_schema: Optional[Dict[str, Any]] = None
+    json_ld_schema: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = None
 
 class HtmlContext(BaseModel):
     relevant_html_product_context: str
 
 class ExtractorOutput(BaseModel):
-    json_ld_schema: Optional[Dict[str, Any]] = None
+    json_ld_schema: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = None
     html_contexts: Dict[str, HtmlContext]
