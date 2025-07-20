@@ -458,4 +458,89 @@ When using `/enrich-product-schema`, you now get comprehensive results:
 }
 ```
 
+## Product Context Scraper
+
+The scraper component is the first stage of our enrichment pipeline, responsible for extracting raw content from product pages. It uses a dual-approach strategy for maximum reliability:
+
+### Primary Method: OpenAI-Powered Extraction
+
+**How it works:**
+1. **Page Loading**: Uses Playwright to load the product page with full JavaScript rendering
+2. **Content Cleaning**: Removes scripts, styles, and extracts clean text from `document.body.innerText`
+3. **Smart Truncation**: Limits text to 20,000 characters to avoid OpenAI token limits
+4. **AI Analysis**: Sends clean text to GPT-4 with structured prompt:
+   ```
+   "Given the text of a product page, extract the main product details 
+   (name, price, description, features, variants, availability) and return 
+   a JSON object: { name, price, description, features[], variants[], availability }"
+   ```
+5. **Validation**: Detects when OpenAI returns non-product content or errors
+
+**OpenAI Success Criteria:**
+- Returns valid JSON with product information
+- No error messages or "not a product page" responses
+- Content length > 10 characters
+
+### Fallback Method: HTML-Based Extraction
+
+**When triggered:**
+- OpenAI token limit exceeded
+- OpenAI detects non-product content (e.g., cookie pages, privacy policies)
+- API errors or empty responses
+
+**How it works:**
+1. **CSS Selector Extraction**: Uses proven selectors to find product elements:
+   - **Name**: `h1.product-title`, `h1.product-name`, `h1`
+   - **Price**: `.price`, `.product-price`, currency validation with regex
+   - **Description**: `.product-description`, `.summary`, length validation
+   - **Features**: `.features li`, `.specifications li`
+   - **Availability**: `.stock`, `.availability`
+
+2. **Image Processing**: 
+   - Extracts product images using `ProductImageExtractor`
+   - Prioritizes main product images over thumbnails
+   - Handles lazy-loaded and high-resolution variants
+
+3. **JSON-LD Schema**: 
+   - Parses structured data from `<script type="application/ld+json">`
+   - Identifies Product schemas using `@type` validation
+   - Extracts schema.org properties as backup data
+
+4. **Image Prioritization**:
+   - Uses JSON-LD schema images as primary source when available
+   - Falls back to scraped images from page analysis
+   - Maintains original scraped images as alternatives
+
+**Output Format:**
+```json
+{
+  "relevant_html_product_context": "Raw HTML or OpenAI JSON",
+  "images": {
+    "url_main_image": "https://...",
+    "other_images": ["https://...", "https://..."]
+  },
+  "json_ld_schema": [/* Parsed schema.org objects */],
+  "raw_page_text": "Clean page text" // Only when OpenAI is used
+}
+```
+
+### Error Handling
+
+The scraper implements comprehensive error handling:
+
+1. **Page Loading Issues**: Retries with different wait conditions
+2. **Content Extraction Failures**: Multiple fallback text extraction methods
+3. **OpenAI Failures**: Automatic fallback to HTML-based approach
+4. **Complete Failure**: Returns `"No content. All techniques failed."`
+
+### Usage in Pipeline
+
+The scraper output feeds directly into the extraction pipeline:
+- **HTML context** → HTML Extractor (22 properties)
+- **Images** → Image Extractor (10 visual properties)  
+- **JSON-LD** → Direct schema.org property mapping
+- **Raw text** → Context for enrichment validation
+
+This dual-approach ensures reliable product data extraction across diverse e-commerce platforms, from simple HTML sites to complex JavaScript-heavy stores.
+
 ---
