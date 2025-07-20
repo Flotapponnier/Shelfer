@@ -1,98 +1,99 @@
 """
 Product Context Extraction Utility
 
-Provides a function to scrape the main product image context from a product page,
-returning HTML snippet and image URLs in a simplified format.
+Fetches page text and uses OpenAI to summarize the main product info,
+returning the raw text, a JSON summary, images, and JSON-LD schemas.
 """
 import logging
 import json
+import asyncio
+import re
+from typing import Dict, Any, List
+
+from ..core.browser_manager import BrowserManager
+from .image_extractor import ProductImageExtractor
 from .json_ld_extraction_utils import JSONLDExtractor
-from typing import Dict, Any
+from ..core.jsonld_parser import parse_json_ld_scripts, _is_product_schema
+from openai_client import OpenAIClient
 
 logger = logging.getLogger(__name__)
 
-async def scrapeProductContext(url: str, headless: bool = True, delay: float = 1.0) -> Dict[str, Any]:
+async def scrapeProductContext(
+    url: str,
+    headless: bool = True,
+    delay: float = 1.0
+) -> Dict[str, Any]:
     """
-    Scrape a product page and return its image URLs based on URL slug matching.
+    1. Loads the page (Playwright).
+    2. Strips <script>/<style> and captures body text.
+    3. Collapses whitespace.
+    4. Sends to OpenAI (gpt-4) to extract a JSON summary:
+       { name, price, description, features[], variants[], availability }
+    5. Extracts product images.
+    6. Parses JSON-LD for schema backup.
+    7. Returns:
+       {
+         "raw_page_text":   str,
+         "relevant_html_product_context":   str (JSON summary),
+         "images":         { url_main_image, other_images[] },
+         "json_ld_schema": [ parsed JSON-LD objects ]
+       }
     """
-    # Lazy import browser and extractor
-    from ..core.browser_manager import BrowserManager
-    from .image_extractor import ProductImageExtractor
     async with BrowserManager(headless=headless) as browser_manager:
         page = await browser_manager.new_page()
         await page.goto(url, wait_until="domcontentloaded", timeout=15000)
-        # Allow lazy-loaded images to load
         await page.wait_for_timeout(int(delay * 1000))
-        extractor = ProductImageExtractor()
-        data = await extractor.extract_product_images(page)
-        # Extract schema.org Product images from JSON-LD as fallback
+
+        # 1) Extract full page text
+        await page.evaluate("() => document.querySelectorAll('script, style').forEach(e => e.remove())")
+        raw_page_text = await page.evaluate("() => document.body.innerText")
+        raw_page_text = re.sub(r"\s+", " ", raw_page_text).strip()
+        logger.debug(f"Raw page text length: {len(raw_page_text)}")
+        logger.debug(f"Raw page text snippet: {raw_page_text[:300]}")
+
+        # 2) Call OpenAI to summarize main product
+        client = OpenAIClient()
+        system_prompt = (
+            "You are an expert product summarizer. "
+            "Given the full text of a product page, extract the main product details "
+            "(name, price, description, features, variants, availability) and return "
+            "a JSON object: { name, price, description, features[], variants[], availability }."
+        )
+        relevant_summary = await asyncio.to_thread(
+            client.complete,
+            system_prompt,
+            raw_page_text,
+            "gpt-4",
+            0,
+            1024
+        )
+        logger.debug(f"LLM summary length: {len(relevant_summary)}")
+
+        # 3) Extract images
+        images_data = await ProductImageExtractor().extract_product_images(page)
+
+        # 4) Extract JSON-LD
         schema_images = []
         try:
-            jsonld_extractor = JSONLDExtractor(delay=delay)
-            jsonld_scripts = await jsonld_extractor.extract_jsonld_from_page(page)
-            for text in jsonld_scripts:
-                if not text:
-                    continue
-                try:
-                    parsed = json.loads(text)
-                except Exception:
-                    continue
-                json_objs = parsed if isinstance(parsed, list) else [parsed]
-                # Flatten @graph entries
-                for obj in list(json_objs):
-                    if isinstance(obj, dict) and '@graph' in obj and isinstance(obj['@graph'], list):
-                        json_objs.extend(obj['@graph'])
-                for obj in json_objs:
-                    if not isinstance(obj, dict):
-                        continue
-                    types = obj.get('@type') or obj.get('type')
-                    types_list = [types] if isinstance(types, str) else types if isinstance(types, list) else []
-                    if any(isinstance(t, str) and t.lower() == 'product' for t in types_list):
-                        image_prop = obj.get('image')
-                        if isinstance(image_prop, str):
-                            schema_images.append(image_prop)
-                        elif isinstance(image_prop, list):
-                            for item in image_prop:
-                                if isinstance(item, str):
-                                    schema_images.append(item)
-                                elif isinstance(item, dict) and isinstance(item.get('url'), str):
-                                    schema_images.append(item['url'])
-                        elif isinstance(image_prop, dict) and isinstance(image_prop.get('url'), str):
-                            schema_images.append(image_prop['url'])
-        except Exception:
-            schema_images = []
-        # Deduplicate schema images
-        schema_images = list(dict.fromkeys(schema_images))
-        data['json_ld_schema'] = schema_images
-        imgs = data.get('images', {})
-        # Override main image with first schema.org image if available
-        if schema_images:
-            original_main = imgs.get('url_main_image')
-            imgs['url_main_image'] = schema_images[0]
-            other_images = imgs.get('other_images') or []
-            # Preserve original scraped main as alternate
-            if original_main and original_main != schema_images[0] and original_main not in other_images:
-                other_images.insert(0, original_main)
-            # Append remaining schema images
-            for img_url in schema_images[1:]:
-                if img_url not in other_images:
-                    other_images.append(img_url)
-            imgs['other_images'] = other_images
+            jsonld_scripts = await JSONLDExtractor().extract_jsonld_from_page(page)
+            parsed = parse_json_ld_scripts(jsonld_scripts)
+            schema_images = [o for o in parsed if _is_product_schema(o)]
+        except Exception as e:
+            logger.warning(f"JSON-LD parse failed: {e}")
+
         await page.close()
-        
-        # Use the processed imgs (don't overwrite with original data!)
-        html_ctx = data.get('relevant_html_product_context', '')
-        # Log for backend visibility
-        logger.debug(f"ProductContext url_main_image: {imgs.get('url_main_image')}")
-        logger.debug(f"ProductContext other_images: {imgs.get('other_images')}")
-        # Return scraped product context
+
         return {
-            'relevant_html_product_context': html_ctx,
-            'images': imgs,
-            'json_ld_schema': schema_images
+            "raw_page_text": raw_page_text,
+            "relevant_html_product_context": relevant_summary,
+            "images": images_data.get("images", {}),
+            "json_ld_schema": schema_images
         }
 
-# Backward compatibility wrapper
-async def scrape_product_context(url: str, headless: bool = True, delay: float = 1.0) -> Dict[str, Any]:
-    """Backward compatibility wrapper for scrapeProductContext"""
+# backward compatibility
+async def scrape_product_context(
+    url: str,
+    headless: bool = True,
+    delay: float = 1.0
+) -> Dict[str, Any]:
     return await scrapeProductContext(url, headless, delay)
