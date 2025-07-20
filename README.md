@@ -57,6 +57,7 @@ Working URLs:
 - https://wallstreetskateshop.fr/en/collections/soldes/products/5-boro-flickeroo-8-25
 - https://amatterofconcrete.com/product/053/
 - https://www.surfkeppler.de/Duotone-Foil-Wing-Set-Aero-Carve-20-SLS-1430-200-mit-Duotone-Mast-Fuselage-Set-Aero-AL-82-76
+- https://jokerbrand.net/shop/stuff/joker-brand-clown-mask/
 
 ## Quick Start
 

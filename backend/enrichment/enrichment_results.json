@@ -1,7 +1,7 @@
 [
   [
-    "category",
-    "herbal tea"
+    "color",
+    "black and white"
   ],
   [
     "keywords",
@@ -12,28 +12,28 @@
     ""
   ],
   [
+    "category",
+    "face mask"
+  ],
+  [
+    "brand",
+    "JOKER"
+  ],
+  [
+    "material",
+    "fabric"
+  ],
+  [
     "size",
     ""
   ],
   [
-    "color",
-    "pink, red, brown, yellow, green"
-  ],
-  [
-    "brand",
-    ""
-  ],
-  [
     "description",
-    "Aromatisierter Früchtetee mit Drachenfrucht-Geschmack. Dieser Früchtetee mit exotischen Drachenfruchtstücken und pinken Blüten ist eine spritzige Erfrischung an heißen Sommertagen. Heiß, eiskalt, als Limonade oder mit Sekt – einfach unwiderstehlich lecker."
-  ],
-  [
-    "material",
-    "dried plant materials"
+    "Halb-Gesichtsmaske aus Neopren. Im Nasenbereich sind kleine Luftlöcher, so dass einem auch mit der Maske die Puste nie ausgeht. Durch den praktischen Klettverschluss kann die Maske schnell individuell an jede Gesichtskontur angepasst werden. Schützt zuverlässig vor Kälte, Wind, Staub, usw."
   ],
   [
     "image",
-    "https://teeshop-berlin.de/products/florapharm-pink-lemonade"
+    "https://jokerbrand.net/shop/stuff/joker-brand-clown-mask/"
   ],
   [
     "offers.itemCondition",
@@ -41,11 +41,11 @@
   ],
   [
     "additionalType",
-    "http://schema.org/HerbalTea"
+    "clown mask"
   ],
   [
     "positiveNotes",
-    "Vibrant mix of colors, natural ingredients, visually appealing assortment"
+    "Bold and striking design, high contrast colors, neatly stitched edges"
   ],
   [
     "negativeNotes",
