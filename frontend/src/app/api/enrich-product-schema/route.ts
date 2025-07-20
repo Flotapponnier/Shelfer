@@ -30,9 +30,9 @@ export async function POST(request: Request) {
     if (!response.ok) {
       throw new Error(`Backend error: ${response.status}`);
     }
-    
+
     const data = await response.json();
-    return NextResponse.json({enrichedProductSchema: data.enrichedProductSchema, originalProductSchema: data.originalProductSchema});
+    return NextResponse.json({enrichedProductSchema: data.enriched_product_schema, originalProductSchema: data.original_product_schema});
   } catch (error) {
     console.error('Error calling scraper:', error);
     // Throw to ensure only the success shape is ever returned
