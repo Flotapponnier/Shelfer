@@ -18,4 +18,6 @@ Instructions:
 - Do NOT wrap the JSON in triple backticks or any markdown formatting.
 - Respond only with the JSON object and nothing else.
 - If the {property} is not present return a json with empty string as value (key: "")
+- Make sure to return ONLY 100% valid JSON-LD following the schema.org convention.
+- If you need to understand the schema.org type definitions, search https://schema.org/docs/full.html for the given property "${property}".
 """

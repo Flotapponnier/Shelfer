@@ -22,28 +22,29 @@ class HtmlExtractorService:
     # Target schema.org properties for HTML extraction
     # Note: "image" property is handled separately by image analysis service
     TARGET_PROPERTIES = [
-        "offers.price",
-        "offers.priceCurrency",
-        "offers.availability",
+        # we'll comment out some properties for making it work for now
+        # "offers.price",
+        # "offers.priceCurrency",
+        # "offers.availability",
+        # "offers.itemCondition",
         "description",
         "brand",
-        "offers.itemCondition",
         "color",
         "material",
-        "aggregateRating",
-        "review",
+        # "aggregateRating",
+        # "review",
         "category",
         "keywords",
-        "manufacturer",
+        # "manufacturer",
         "size",
         "audience",
-        "additionalType",
-        "hasMerchantReturnPolicy",
-        "negativeNotes",
-        "positiveNotes",
-        "nsn",
-        "countryOfLastProcessing",
-        "isFamilyFriendly"
+        # "additionalType",
+        # "hasMerchantReturnPolicy",
+        # "negativeNotes",
+        # "positiveNotes",
+        # "nsn",
+        # "countryOfLastProcessing",
+        # "isFamilyFriendly"
     ]
     
     def __init__(self):

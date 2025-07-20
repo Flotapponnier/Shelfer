@@ -2,7 +2,11 @@
 
 ## Product Brief
 
-**Problem Statement:** E-commerce and product websites typically contain rich, unstructured data (descriptions, images, reviews, specifications) that LLMs struggle to process effectively. Meanwhile, existing schema.org Product markup on these pages is often sparse, missing critical structured data that could improve SEO, discoverability, and machine readability.
+**Problem Statement:** E-commerce and product websites typically contain rich, unstructured data (descriptions, images, reviews, specifications) that LLMs struggle to process effectively. Meanwhile, existing schema.org Product markup on these pages is often sparse, missing critical structured data that will improve SEO, discoverability, and machine & LLM understanding.
+
+**Hypothesis & Relevancy to Peec AI:** We believe that introducing richer, structured product schema via the schema.org convention, LLMs will rate the given website higher. With this project, we are certain this can be easily tested, without downgrading existing schema.org's or publishing wrong product information.
+
+**Promise:** The promise of this project is to ingest already existing context to create more machine reable content in the fastest way possible and minimizing human involvement. By creating a human-in-the-loop system, a powerful feedback loop can be built by collecting the human approved or disapproved changes and using them to fine-tune a model at some point.
 
 **Solution:** An AI-powered enrichment platform that transforms unstructured product page content into comprehensive, structured schema.org Product data through intelligent scraping, filtering, and LLM-based field extraction.
 
@@ -40,11 +44,12 @@
 
 3. **Multi-Step Data Loss**: Since this is a multi-step process that progressively narrows down data (scraping → extraction → enrichment), we have multiple points where data gathering can go wrong, potentially leading to inaccurate or incomplete results. Each step introduces potential failure points that can cascade through the pipeline.
 
+4. **Complexity and Variety of Schema.org**: Currently, we are handling only single product schemas correctly. If a website has a `{ProductGroup: [{Product}, {Product}, ...]}` type of structure, the pipeline will fail. If you want test other website than the ones we provided before, pls view url page source in the browser, search for `ld+json` and find a product page where there is a schema.org with the handled structure of single product schema.
+
 **Current Focus**: We have focused on testing with specific pages that we know work reliably to demonstrate the core functionality and validate the approach. Further improvements to robustness, error handling, and universal compatibility are planned for future development phases.
 
 Working URLs:
 
-- https://www.bergfreunde.de/stoic-merinochill-mmxx-goeteborg-tee-merinoshirt/
 - https://teeshop-berlin.de/products/florapharm-pink-lemonade
 - https://www.honest-rare.de/en/piranja-limo-woodruff-lime/
 -

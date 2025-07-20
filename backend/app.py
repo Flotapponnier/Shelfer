@@ -107,11 +107,36 @@ async def enrich_product_schema(request: URLRequest):
         print(f"✨ Step 3: Running schema enrichment...")
         
         # Prepare product metadata for enricher (clean, no redundancy)
+        # Filter json_ld_schema to only include the object with '@type': 'Product'
+        
+
+        # hacky code to make it work. needs to be replaced.
+        json_ld_schema = extraction_result.get("json_ld_schema")
+        filtered_json_ld_schema = None
+        if isinstance(json_ld_schema, list):
+            filtered = [obj for obj in json_ld_schema if isinstance(obj, dict) and obj.get("@type") == "Product"]
+            filtered_json_ld_schema = filtered[0] if filtered else None
+        elif isinstance(json_ld_schema, dict) and json_ld_schema.get("@type") == "Product":
+            filtered_json_ld_schema = json_ld_schema
+        else:
+            filtered_json_ld_schema = None
+        # Set json_ld_schema to the first element of the filtered array if present, else None
         product_metadata = {
             "product_name": None,  # TODO: Could extract from HTML or let enricher infer
             "product_url": request.url,
-            "json_ld_schema": extraction_result.get("json_ld_schema")
+            "json_ld_schema": ([filtered_json_ld_schema] if filtered_json_ld_schema else [None])[0]
         }
+
+        # Save product_metadata to a file (append as JSON line)
+        import json
+        import os
+        # Ensure backend directory exists before writing logs
+        os.makedirs("backend", exist_ok=True)
+        try:
+            with open("backend/product_metadata_log.jsonl", "a") as f:
+                f.write(json.dumps(product_metadata) + "\n")
+        except Exception as file_err:
+            print(f"⚠️ Failed to write product_metadata to file: {file_err}")
         
         # Get HTML contexts from extraction results  
         html_contexts = extraction_result.get("html_contexts", {})
@@ -160,12 +185,21 @@ async def enrich_product_schema(request: URLRequest):
             "extraction_metadata": metadata
         }
         print(enriched_schema)
-        original_schema = product_metadata["json_ld_schema"]
+        original_schema = product_metadata.get('json_ld_schema')
         # Add enrichment results if successful
+
+        
         
         response["original_product_schema"] = original_schema
         response["enriched_product_schema"] = enriched_schema
         print(response)
+        # Save the full response to a file (append as JSON line)
+        try:
+            os.makedirs("backend", exist_ok=True)
+            with open("backend/enrichment_results_log.jsonl", "a") as f:
+                f.write(json.dumps(response) + "\n")
+        except Exception as file_err:
+            print(f"⚠️ Failed to write enrichment results to file: {file_err}")
         return response
         
     except Exception as e:
