@@ -1,7 +1,7 @@
 from typing import List, Optional, Dict, Any
-from enrichment.models import PropertyContext, EnrichedProduct
+from enrichment.models import PropertyContext
 from enrichment.utils import clean_response
-from openai_client import OpenAIClient, AsyncOpenAIClient
+from openai_client import AsyncOpenAIClient
 from prompts.product_enrichment import ENRICHER_SYSTEM_PROMPT, ENRICHER_USER_PROMPT_TEMPLATE
 import asyncio
 import json
@@ -23,15 +23,14 @@ class AsyncEnricher:
         except Exception as e:
             return {"error": str(e)}
 
-    async def enrich(self, product_metadata: dict, html_contexts: dict) -> EnrichedProduct:
+    async def enrich(self, product_metadata: dict, html_contexts: dict) -> dict:
+        print("\n[Enricher] Product Metadata Received:")
+        print(json.dumps(product_metadata, indent=2, ensure_ascii=False))
         product_name = product_metadata.get('product_name', '')
         product_url = product_metadata.get('product_url', '')
         json_ld_schema = product_metadata.get('json_ld_schema')
-        print("[ASYNC ENRICHER] Input json_ld_schema:")
-        print(json.dumps(json_ld_schema, indent=2, ensure_ascii=False))
         original_schema = dict(json_ld_schema) if json_ld_schema else {}
-        base_schema = dict(original_schema)
-        not_extracted = []
+        enriched_json_schema = dict(original_schema)
 
         async def enrich_property(prop, ctx):
             context = PropertyContext(
@@ -46,19 +45,16 @@ class AsyncEnricher:
             llm_result = await self._call_llm_for_property(prompt)
             value = llm_result.get(prop) if isinstance(llm_result, dict) else llm_result
             return prop, value
-
         tasks = [enrich_property(prop, ctx) for prop, ctx in html_contexts.items()]
         results = await asyncio.gather(*tasks)
 
+        not_extracted_properties = []
         for prop, value in results:
-            if not value:
-                not_extracted.append(prop)
+            if value is not None and value != "":
+                enriched_json_schema[prop] = value
             else:
-                base_schema[prop] = value
+                enriched_json_schema[prop] = ""
+                not_extracted_properties.append(prop)
 
-        base_schema.setdefault("enriched", True)
-        return EnrichedProduct(
-            enriched_json_ld_schema=base_schema,
-            original_json_ld_schema=original_schema,
-            not_extracted_properties=not_extracted
-        )
+        enriched_json_schema.setdefault("enriched", True)
+        return enriched_json_schema, not_extracted_properties

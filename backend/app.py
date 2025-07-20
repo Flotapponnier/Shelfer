@@ -119,37 +119,36 @@ async def enrich_product_schema(request: URLRequest):
         try:
             # Call enricher with clean interface
             enricher = AsyncEnricher()
-            enriched_result = await enricher.enrich(product_metadata, html_contexts)
-            
+            enriched_schema, not_extracted_properties = await enricher.enrich(product_metadata, html_contexts)
+
             # Log enrichment summary
-            enriched_properties = len(html_contexts) - len(enriched_result.not_extracted_properties)
-            enrichment_success_rate = enriched_properties / len(html_contexts) if html_contexts else 0
-            
+            enriched_count = len(html_contexts) - len(not_extracted_properties)
+            enrichment_success_rate = enriched_count / len(html_contexts) if html_contexts else 0
+
             print(f"📈 Enrichment completed:")
-            print(f"   • Properties enriched: {enriched_properties}/{len(html_contexts)}")
+            print(f"   • Properties enriched: {enriched_count}/{len(html_contexts)}")
             print(f"   • Enrichment success rate: {enrichment_success_rate:.1%}")
-            print(f"   • Failed properties: {enriched_result.not_extracted_properties}")
-            print(f"   • Final schema complete: {enriched_result.finished}")
-            
+            print(f"   • Failed properties: {not_extracted_properties}")
+            print(f"   • Final schema complete: {len(not_extracted_properties) == 0}")
+
             enrichment_metadata = {
                 "properties_processed": len(html_contexts),
-                "properties_enriched": enriched_properties,
-                "properties_failed": len(enriched_result.not_extracted_properties),
-                "failed_properties": enriched_result.not_extracted_properties,
-                "success_rate": enrichment_success_rate,
-                "schema_complete": enriched_result.finished
+                "properties_enriched": enriched_count,
+                "properties_failed": len(not_extracted_properties),
+                "failed_properties": not_extracted_properties,
+                "not_extracted_properties": not_extracted_properties,
+                "success_rate": enrichment_success_rate
             }
             
         except Exception as e:
             print(f"⚠️ Enrichment failed: {str(e)}")
             # Continue with extraction results only
-            enriched_result = None
+            enriched_schema = None
             enrichment_metadata = {
                 "error": str(e),
                 "properties_processed": len(html_contexts),
                 "properties_enriched": 0,
                 "success_rate": 0,
-                "schema_complete": False
             }
         
         # Return comprehensive results
@@ -160,14 +159,13 @@ async def enrich_product_schema(request: URLRequest):
             "extraction_results": extraction_result,
             "extraction_metadata": metadata
         }
-        
+        print(enriched_schema)
+        original_schema = product_metadata["json_ld_schema"]
         # Add enrichment results if successful
-        if enriched_result:
-            response["enriched_schema"] = enriched_result.enriched_json_ld_schema
-            response["original_schema"] = enriched_result.original_json_ld_schema
         
-        response["enrichment_metadata"] = enrichment_metadata
-        
+        response["original_product_schema"] = original_schema
+        response["enriched_product_schema"] = enriched_schema
+        print(response)
         return response
         
     except Exception as e:
@@ -199,4 +197,4 @@ async def cors_handler(request, call_next):
         return response
     
     response = await call_next(request)
-    return response 
+    return response

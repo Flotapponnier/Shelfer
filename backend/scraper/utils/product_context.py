@@ -40,14 +40,114 @@ async def scrapeProductContext(
          "json_ld_schema": [ parsed JSON-LD objects ]
        }
     """
+    
+    # Helper function for detailed JSON-LD debugging
+    async def debug_jsonld_extraction(page, path_name: str):
+        """Debug JSON-LD extraction step by step with enhanced timing for dynamic content."""
+        logger.info(f"🔍 DEBUG: Starting JSON-LD extraction for {path_name}")
+        
+        # Step 0: Enhanced waiting for dynamic content
+        logger.info(f"⏳ DEBUG: Waiting for dynamic content to load...")
+        
+        # Wait for network to be idle (important for dynamic content)
+        try:
+            await page.wait_for_load_state('networkidle', timeout=10000)
+            logger.info(f"✅ DEBUG: Network is idle")
+        except Exception as e:
+            logger.warning(f"⚠️ DEBUG: Network idle timeout: {e}")
+        
+        # Additional wait for JavaScript to execute
+        await page.wait_for_timeout(3000)  # 3 seconds for JS execution
+        
+        # Try to wait specifically for JSON-LD scripts to appear (without visibility requirement)
+        try:
+            await page.wait_for_selector('script[type="application/ld+json"]', state='attached', timeout=5000)
+            logger.info(f"✅ DEBUG: JSON-LD script tag appeared!")
+        except Exception as e:
+            logger.warning(f"⚠️ DEBUG: No JSON-LD script tag appeared within 5s: {e}")
+        
+        # Step 1: Extract raw scripts
+        try:
+            jsonld_extractor = JSONLDExtractor(delay=delay)
+            jsonld_scripts = await jsonld_extractor.extract_jsonld_from_page(page)
+            logger.info(f"📄 DEBUG Step 1 ({path_name}): Found {len(jsonld_scripts)} JSON-LD script tags")
+            
+            # Log each script
+            for i, script in enumerate(jsonld_scripts):
+                script_preview = script[:200] if script else "EMPTY"
+                logger.info(f"   Script {i+1}: {len(script)} chars - {script_preview}...")
+            
+            if not jsonld_scripts:
+                logger.warning(f"🚨 DEBUG: No JSON-LD scripts found on page")
+                # Try one more time with longer wait
+                logger.info(f"🔄 DEBUG: Trying one more time with longer wait...")
+                await page.wait_for_timeout(5000)  # Wait 5 more seconds
+                jsonld_scripts = await jsonld_extractor.extract_jsonld_from_page(page)
+                logger.info(f"📄 DEBUG Step 1 RETRY ({path_name}): Found {len(jsonld_scripts)} JSON-LD script tags")
+                
+                if not jsonld_scripts:
+                    return []
+            
+        except Exception as e:
+            logger.error(f"❌ DEBUG Step 1 ({path_name}): Script extraction failed: {e}")
+            return []
+        
+        # Step 2: Parse scripts
+        try:
+            parsed = parse_json_ld_scripts(jsonld_scripts)
+            logger.info(f"🔧 DEBUG Step 2 ({path_name}): Parsed {len(parsed)} JSON-LD objects")
+            
+            # Log each parsed object
+            for i, obj in enumerate(parsed):
+                obj_type = obj.get('@type', 'NO_TYPE')
+                obj_keys = list(obj.keys())[:5]  # First 5 keys
+                logger.info(f"   Object {i+1}: @type='{obj_type}', keys={obj_keys}")
+            
+            if not parsed:
+                logger.warning(f"🚨 DEBUG: Scripts found but parsing returned no objects")
+                return []
+                
+        except Exception as e:
+            logger.error(f"❌ DEBUG Step 2 ({path_name}): JSON parsing failed: {e}")
+            return []
+        
+        # Step 3: Filter for products
+        try:
+            schema_objects = [o for o in parsed if _is_product_schema(o)]
+            logger.info(f"🎯 DEBUG Step 3 ({path_name}): Found {len(schema_objects)} product schemas")
+            
+            # Log filtering results
+            for i, obj in enumerate(parsed):
+                obj_type = obj.get('@type', 'NO_TYPE')
+                is_product = _is_product_schema(obj)
+                has_offers = 'offers' in obj
+                has_sku = 'sku' in obj
+                has_name = 'name' in obj
+                logger.info(f"   Object {i+1}: @type='{obj_type}', is_product={is_product}, offers={has_offers}, sku={has_sku}, name={has_name}")
+            
+            if not schema_objects and parsed:
+                logger.warning(f"🚨 DEBUG: Objects found but none matched product schema criteria")
+                logger.info(f"   Available @types: {[obj.get('@type', 'NO_TYPE') for obj in parsed]}")
+            
+            return schema_objects
+            
+        except Exception as e:
+            logger.error(f"❌ DEBUG Step 3 ({path_name}): Product filtering failed: {e}")
+            return []
+    
     async with BrowserManager(headless=headless) as browser_manager:
         page = await browser_manager.new_page()
         await page.goto(url, wait_until="domcontentloaded", timeout=15000)
         # Allow lazy-loaded images to load
         await page.wait_for_timeout(int(delay * 1000))
 
-        # 1) Extract full page text for OpenAI
-        await page.evaluate("() => document.querySelectorAll('script, style').forEach(e => e.remove())")
+        # 1) Extract full page text for OpenAI (preserve JSON-LD scripts)
+        await page.evaluate("""() => {
+            // Remove all scripts EXCEPT JSON-LD scripts
+            document.querySelectorAll('script:not([type="application/ld+json"])').forEach(e => e.remove());
+            // Remove style tags
+            document.querySelectorAll('style').forEach(e => e.remove());
+        }""")
         raw_page_text = await page.evaluate("() => document.body.innerText")
         raw_page_text = re.sub(r"\s+", " ", raw_page_text).strip()
         logger.debug(f"Raw page text length: {len(raw_page_text)}")
@@ -164,46 +264,29 @@ async def scrapeProductContext(
                 extractor = ProductImageExtractor()
                 data = await extractor.extract_product_images(page)
                 
-                # Extract schema.org Product images from JSON-LD as fallback (original logic)
+                # Extract JSON-LD schemas (using robust debugging)
+                schema_objects = await debug_jsonld_extraction(page, "HTML_FALLBACK")
+                
+                # Extract image URLs from schema objects for image processing
                 schema_images = []
-                try:
-                    jsonld_extractor = JSONLDExtractor(delay=delay)
-                    jsonld_scripts = await jsonld_extractor.extract_jsonld_from_page(page)
-                    for text in jsonld_scripts:
-                        if not text:
-                            continue
-                        try:
-                            parsed = json.loads(text)
-                        except Exception:
-                            continue
-                        json_objs = parsed if isinstance(parsed, list) else [parsed]
-                        # Flatten @graph entries
-                        for obj in list(json_objs):
-                            if isinstance(obj, dict) and '@graph' in obj and isinstance(obj['@graph'], list):
-                                json_objs.extend(obj['@graph'])
-                        for obj in json_objs:
-                            if not isinstance(obj, dict):
-                                continue
-                            types = obj.get('@type') or obj.get('type')
-                            types_list = [types] if isinstance(types, str) else types if isinstance(types, list) else []
-                            if any(isinstance(t, str) and t.lower() == 'product' for t in types_list):
-                                image_prop = obj.get('image')
-                                if isinstance(image_prop, str):
-                                    schema_images.append(image_prop)
-                                elif isinstance(image_prop, list):
-                                    for item in image_prop:
-                                        if isinstance(item, str):
-                                            schema_images.append(item)
-                                        elif isinstance(item, dict) and isinstance(item.get('url'), str):
-                                            schema_images.append(item['url'])
-                                elif isinstance(image_prop, dict) and isinstance(image_prop.get('url'), str):
-                                    schema_images.append(image_prop['url'])
-                except Exception:
-                    schema_images = []
+                for obj in schema_objects:
+                    image_prop = obj.get('image')
+                    if isinstance(image_prop, str):
+                        schema_images.append(image_prop)
+                    elif isinstance(image_prop, list):
+                        for item in image_prop:
+                            if isinstance(item, str):
+                                schema_images.append(item)
+                            elif isinstance(item, dict) and isinstance(item.get('url'), str):
+                                schema_images.append(item['url'])
+                    elif isinstance(image_prop, dict) and isinstance(image_prop.get('url'), str):
+                        schema_images.append(image_prop['url'])
                 
                 # Deduplicate schema images
                 schema_images = list(dict.fromkeys(schema_images))
-                data['json_ld_schema'] = schema_images
+                
+                # Store full schema objects (consistent with OpenAI path)
+                data['json_ld_schema'] = schema_objects
                 imgs = data.get('images', {})
                 
                 # Override main image with first schema.org image if available
@@ -227,11 +310,11 @@ async def scrapeProductContext(
                 logger.debug(f"ProductContext url_main_image: {imgs.get('url_main_image')}")
                 logger.debug(f"ProductContext other_images: {imgs.get('other_images')}")
                 
-                # Return original format
+                # Return format consistent with OpenAI path
                 return {
                     'relevant_html_product_context': html_ctx,
                     'images': imgs,
-                    'json_ld_schema': schema_images
+                    'json_ld_schema': schema_objects
                 }
                 
             except Exception as e:
@@ -241,14 +324,8 @@ async def scrapeProductContext(
         # 4) Extract images (OpenAI success path)
         extractor = ProductImageExtractor()
         data = await extractor.extract_product_images(page)
-        # 5) Extract JSON-LD (using new approach)
-        schema_images = []
-        try:
-            jsonld_scripts = await JSONLDExtractor().extract_jsonld_from_page(page)
-            parsed = parse_json_ld_scripts(jsonld_scripts)
-            schema_images = [o for o in parsed if _is_product_schema(o)]
-        except Exception as e:
-            logger.warning(f"JSON-LD parse failed: {e}")
+        # 5) Extract JSON-LD (using robust debugging)
+        schema_objects = await debug_jsonld_extraction(page, "OPENAI_SUCCESS")
 
         await page.close()
 
@@ -256,7 +333,7 @@ async def scrapeProductContext(
             "raw_page_text": raw_page_text,
             "relevant_html_product_context": relevant_summary,
             "images": data.get("images", {}),
-            "json_ld_schema": schema_images
+            "json_ld_schema": schema_objects
         }
 
 
