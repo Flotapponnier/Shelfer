@@ -31,14 +31,14 @@ export default function Home() {
 
       <div className="w-full mx-auto">
 
-      <div className="text-center mb-12 max-w-sm mx-auto">
+      <div className="text-center mb-12 max-w-xl mx-auto">
 
           <p className="text-xl text-gray-600">
             Enter a URL of an e-commerce shop&apos;s product page to scrape and enrich it with AI-powered recommendations
           </p>
           </div>
 
-        <div className="bg-white rounded-lg shadow-xl p-8 mb-8">
+        <div className="bg-white rounded-lg shadow-xl p-8 mb-8 max-w-xl mx-auto">
           <div className="space-y-4 mb-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
