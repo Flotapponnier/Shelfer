@@ -44,10 +44,20 @@
 
 Working URLs:
 
-- https://www.bergfreunde.de/stoic-merinochill-mmxx-goeteborg-tee-merinoshirt/
-- https://teeshop-berlin.de/products/florapharm-pink-lemonade
-- https://www.honest-rare.de/en/piranja-limo-woodruff-lime/
--
+  https://www.bergfreunde.de/stoic-merinochill-mmxx-goeteborg-tee-merinoshirt/
+  https://teeshop-berlin.de/products/florapharm-pink-lemonade
+  https://www.honest-rare.de/en/piranja-limo-woodruff-lime/
+  https://www.tantedampf.de/liquids/tante-dampf-kreuzberger-ernte-remastered-10ml.html#/526-nikotin-12_mg_ml
+  https://tyneeboard.com/products/tynee-ultra-hub-motor-electric-skateboard
+  https://www.xn--arbeitsschutz-gnstig-3ec.de/PSA-Sonderprogramm/Funktions-Winterbekleidung/Pullover-Strickjacken/KUeBLER-Kaelteschutz-Strickjacke-Light-300-g-m-dunkelblau-schwarz::5067.html
+  https://wallstreetskateshop.fr/en/collections/soldes/products/5-boro-flickeroo-8-25
+  https://www.adoebike.com/products/ado-air-20-pro-ultra-faltbares-elektrofahrrad
+  https://www.aventon.comADO Air 20 Pro | Ultra/products/aventure2-ebike?variant=42255489499331
+  https://www.oliunid.com/eu/lattice-training-mxedge-switch-trave-arrampicata-portatile
+  https://amatterofconcrete.com/product/053/
+  https://www.paperandtea.com/products/summer-love-affair
+  https://www.wolters-cat-dog.de/en/detail/94c8eafc010a50d7aff779932e48d9f9?cat=c3d351e998d95ff0a84f923f3ed64683
+  https://www.surfkeppler.de/Duotone-Foil-Wing-Set-Aero-Carve-20-SLS-1430-200-mit-Duotone-Mast-Fuselage-Set-Aero-AL-82-76
 
 ## Quick Start
 
