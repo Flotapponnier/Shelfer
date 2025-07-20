@@ -30,6 +30,25 @@
 - Maintains data quality through human oversight and validation
 - Supports 23+ schema.org Product properties out-of-the-box
 
+## Limitations
+
+**Important Notice:** This is a Proof of Concept (POC) with several known limitations that need to be addressed in future iterations:
+
+1. **E-commerce Store Compatibility**: Not working reliably for all e-commerce stores due to anti-scraping measures and access restrictions. Many sites implement bot detection, rate limiting, or require authentication, which can prevent successful data extraction.
+
+2. **HTML Structure Variability**: Inconsistent results across different websites due to vastly different HTML structures, CSS frameworks, and page layouts. What works well for one store may fail completely for another due to unique DOM structures and styling approaches.
+
+3. **Multi-Step Data Loss**: Since this is a multi-step process that progressively narrows down data (scraping → extraction → enrichment), we have multiple points where data gathering can go wrong, potentially leading to inaccurate or incomplete results. Each step introduces potential failure points that can cascade through the pipeline.
+
+**Current Focus**: We have focused on testing with specific pages that we know work reliably to demonstrate the core functionality and validate the approach. Further improvements to robustness, error handling, and universal compatibility are planned for future development phases.
+
+Working URLs:
+
+- https://www.bergfreunde.de/stoic-merinochill-mmxx-goeteborg-tee-merinoshirt/
+- https://teeshop-berlin.de/products/florapharm-pink-lemonade
+- https://www.honest-rare.de/en/piranja-limo-woodruff-lime/
+-
+
 ## Quick Start
 
 ### Prerequisites
@@ -109,18 +128,6 @@ make test-all                 # Run all extractor service tests
 ```
 
 **Technical Architecture:** Next.js frontend with Python FastAPI backend, featuring modular scraper, enricher, and merger components integrated with OpenAI's GPT models.
-
-## Limitations
-
-**Important Notice:** This is a Proof of Concept (POC) with several known limitations that need to be addressed in future iterations:
-
-1. **E-commerce Store Compatibility**: Not working reliably for all e-commerce stores due to anti-scraping measures and access restrictions. Many sites implement bot detection, rate limiting, or require authentication, which can prevent successful data extraction.
-
-2. **HTML Structure Variability**: Inconsistent results across different websites due to vastly different HTML structures, CSS frameworks, and page layouts. What works well for one store may fail completely for another due to unique DOM structures and styling approaches.
-
-3. **Multi-Step Data Loss**: Since this is a multi-step process that progressively narrows down data (scraping → extraction → enrichment), we have multiple points where data gathering can go wrong, potentially leading to inaccurate or incomplete results. Each step introduces potential failure points that can cascade through the pipeline.
-
-**Current Focus**: We have focused on testing with specific pages that we know work reliably to demonstrate the core functionality and validate the approach. Further improvements to robustness, error handling, and universal compatibility are planned for future development phases.
 
 ## Project Structure
 
