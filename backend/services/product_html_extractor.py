@@ -234,8 +234,8 @@ class ProductHtmlExtractor:
                                 else relevanceScore += 25;
                                 
                                 // Boost score if product name appears in text
-                                if (productName) {{
-                                    const nameWords = productName.toLowerCase().split(' ');
+                                if (productName && typeof productName === 'string' && productName.trim()) {{
+                                    const nameWords = productName.toLowerCase().split(' ').filter(word => word.trim());
                                     nameWords.forEach(word => {{
                                         if (word.length > 3 && text.includes(word)) {{
                                             relevanceScore += 15;
