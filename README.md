@@ -52,6 +52,11 @@ Working URLs:
 
 - https://teeshop-berlin.de/products/florapharm-pink-lemonade
 - https://www.honest-rare.de/en/piranja-limo-woodruff-lime/
+- https://www.tantedampf.de/liquids/tante-dampf-kreuzberger-ernte-remastered-10ml.html#/526-nikotin-12_mg_ml
+- https://tyneeboard.com/products/tynee-ultra-hub-motor-electric-skateboard
+- https://wallstreetskateshop.fr/en/collections/soldes/products/5-boro-flickeroo-8-25
+- https://amatterofconcrete.com/product/053/
+- https://www.surfkeppler.de/Duotone-Foil-Wing-Set-Aero-Carve-20-SLS-1430-200-mit-Duotone-Mast-Fuselage-Set-Aero-AL-82-76
 
 ## Quick Start
 
