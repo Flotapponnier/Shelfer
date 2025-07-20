@@ -45,8 +45,6 @@ class AsyncEnricher:
             llm_result = await self._call_llm_for_property(prompt)
             value = llm_result.get(prop) if isinstance(llm_result, dict) else llm_result
             return prop, value
-        print([prop for prop, _ in html_contexts.items()])
-        print(banana)
         tasks = [enrich_property(prop, ctx) for prop, ctx in html_contexts.items()]
         results = await asyncio.gather(*tasks)
 
