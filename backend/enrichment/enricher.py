@@ -1,16 +1,17 @@
 from typing import List, Optional, Dict, Any
 from enrichment.models import PropertyContext, EnrichedProduct
 from enrichment.utils import clean_response
-from openai_client import OpenAIClient
+from openai_client import OpenAIClient, AsyncOpenAIClient
 from prompts.product_enrichment import ENRICHER_SYSTEM_PROMPT, ENRICHER_USER_PROMPT_TEMPLATE
+import asyncio
+import json
 
+class AsyncEnricher:
+    def __init__(self):
+        self.openai_client = AsyncOpenAIClient()
 
-class Enricher:
-    openai_client = OpenAIClient()
-
-    @staticmethod
-    def _call_llm_for_property(prompt: str) -> Any:
-        raw = Enricher.openai_client.complete(
+    async def _call_llm_for_property(self, prompt: str) -> Any:
+        raw = await self.openai_client.complete(
             ENRICHER_SYSTEM_PROMPT,
             prompt,
             model="gpt-4o-mini",
@@ -22,65 +23,40 @@ class Enricher:
         except Exception as e:
             return {"error": str(e)}
 
-    @staticmethod
-    def enrich(
-        product_metadata: dict, 
-        html_contexts: dict
-    ) -> EnrichedProduct:
-        """
-        Enrich product schema using LLM with clean, separated inputs.
-        
-        Args:
-            product_metadata: {
-                'product_name': str,
-                'product_url': str, 
-                'json_ld_schema': dict (optional existing schema)
-            }
-            html_contexts: {
-                'offers.price': {'relevant_html_product_context': '<span>$29.99</span>'},
-                'material': {'relevant_html_product_context': '<div>Cotton</div>'},
-                ...
-            }
-            
-        Returns:
-            EnrichedProduct with enriched schema and metadata
-        """
-        # Extract product metadata
+    async def enrich(self, product_metadata: dict, html_contexts: dict) -> EnrichedProduct:
         product_name = product_metadata.get('product_name', '')
         product_url = product_metadata.get('product_url', '')
-        
-        # Handle json_ld_schema safely (can be None)
         json_ld_schema = product_metadata.get('json_ld_schema')
+        print("[ASYNC ENRICHER] Input json_ld_schema:")
+        print(json.dumps(json_ld_schema, indent=2, ensure_ascii=False))
         original_schema = dict(json_ld_schema) if json_ld_schema else {}
-        
-        # Start with original schema as base for enrichment
         base_schema = dict(original_schema)
         not_extracted = []
-        
-        # Process each property context
-        for prop, ctx in html_contexts.items():
+
+        async def enrich_property(prop, ctx):
             context = PropertyContext(
                 relevant_html_product_context=ctx.get('relevant_html_product_context', '')
             )
-            
             prompt = ENRICHER_USER_PROMPT_TEMPLATE.format(
                 property=prop,
                 product_name=product_name,
                 product_url=product_url,
                 html=context.relevant_html_product_context
             )
-            
-            llm_result = Enricher._call_llm_for_property(prompt)
+            llm_result = await self._call_llm_for_property(prompt)
             value = llm_result.get(prop) if isinstance(llm_result, dict) else llm_result
-            
+            return prop, value
+
+        tasks = [enrich_property(prop, ctx) for prop, ctx in html_contexts.items()]
+        results = await asyncio.gather(*tasks)
+
+        for prop, value in results:
             if not value:
                 not_extracted.append(prop)
             else:
                 base_schema[prop] = value
-        
-        # Add enrichment marker
+
         base_schema.setdefault("enriched", True)
-        
         return EnrichedProduct(
             enriched_json_ld_schema=base_schema,
             original_json_ld_schema=original_schema,

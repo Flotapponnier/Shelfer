@@ -79,11 +79,11 @@ class ExtractorService:
             
             # Step 1: Extract HTML contexts (22 properties)
             logger.info("Running HTML extraction...")
-            html_result = self.html_extractor.extract_html_contexts(scraper_input)
+            html_result = await self.html_extractor.extract_html_contexts(scraper_input)
             
             # Step 2: Extract image contexts (10 properties)
             logger.info("Running image extraction...")
-            image_contexts = self.image_extractor.extract_image_contexts(
+            image_contexts = await self.image_extractor.extract_image_contexts(
                 scraper_input, 
                 product_name=product_name,
                 product_url=product_url

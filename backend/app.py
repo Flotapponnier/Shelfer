@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from services.extractor_service import ExtractorService
-from enrichment.enricher import Enricher
+from enrichment.enricher import AsyncEnricher
 
 load_dotenv()
 
@@ -118,10 +118,8 @@ async def enrich_product_schema(request: URLRequest):
         
         try:
             # Call enricher with clean interface
-            enriched_result = Enricher.enrich(
-                product_metadata=product_metadata,
-                html_contexts=html_contexts
-            )
+            enricher = AsyncEnricher()
+            enriched_result = await enricher.enrich(product_metadata, html_contexts)
             
             # Log enrichment summary
             enriched_properties = len(html_contexts) - len(enriched_result.not_extracted_properties)

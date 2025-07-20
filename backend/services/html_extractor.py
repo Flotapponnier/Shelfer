@@ -1,12 +1,13 @@
 import logging
 from typing import Dict, List
-from openai_client import OpenAIClient
+from openai_client import AsyncOpenAIClient
 from schemas.product import ScraperInput, ExtractorOutput, HtmlContext
 from prompts.html_extraction import (
     HTML_EXTRACTION_SYSTEM_PROMPT,
     HTML_EXTRACTION_USER_PROMPT_TEMPLATE,
     PROPERTY_DESCRIPTIONS
 )
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -46,9 +47,9 @@ class HtmlExtractorService:
     ]
     
     def __init__(self):
-        self.openai_client = OpenAIClient()
+        self.openai_client = AsyncOpenAIClient()
     
-    def extract_html_contexts(self, scraper_input: ScraperInput) -> ExtractorOutput:
+    async def extract_html_contexts(self, scraper_input: ScraperInput) -> ExtractorOutput:
         """
         Main method to extract relevant HTML contexts for each target property from HTML only.
         
@@ -62,44 +63,40 @@ class HtmlExtractorService:
         """
         try:
             logger.info(f"Starting HTML extraction for {len(self.TARGET_PROPERTIES)} properties")
-            
             html_contexts = {}
-            
-            # Extract relevant HTML for each target property
-            for property_name in self.TARGET_PROPERTIES:
+
+            async def extract_for_property(property_name):
                 try:
-                    relevant_html = self._extract_property_html(
+                    relevant_html = await self._extract_property_html(
                         property_name=property_name,
                         product_html=scraper_input.product_html
                     )
-                    
                     html_contexts[property_name] = HtmlContext(
                         relevant_html_product_context=relevant_html
                     )
-                    
                     logger.debug(f"Successfully extracted HTML for property: {property_name}")
-                    
                 except Exception as e:
                     logger.error(f"Failed to extract HTML for property {property_name}: {str(e)}")
-                    # Continue with empty context if extraction fails for one property
                     html_contexts[property_name] = HtmlContext(
                         relevant_html_product_context=""
                     )
-            
+
+            # Run all property extractions in parallel
+            tasks = [extract_for_property(property_name) for property_name in self.TARGET_PROPERTIES]
+            await asyncio.gather(*tasks)
+
             # Create and return the output
             result = ExtractorOutput(
                 json_ld_schema=scraper_input.json_ld_schema,
                 html_contexts=html_contexts
             )
-            
             logger.info("HTML extraction completed successfully")
             return result
-            
         except Exception as e:
             logger.error(f"Critical error in HTML extraction: {str(e)}")
             raise
     
-    def _extract_property_html(self, property_name: str, product_html: str) -> str:
+    async def _extract_property_html(self, property_name: str, product_html: str) -> str:
         """
         Extract relevant HTML chunks for a specific schema.org property using OpenAI.
         
@@ -115,36 +112,31 @@ class HtmlExtractorService:
             if not product_html or not product_html.strip():
                 logger.warning(f"Empty product HTML provided for property {property_name} - skipping extraction to prevent hallucination")
                 return ""
-            
             # Get property description for context
             property_description = PROPERTY_DESCRIPTIONS.get(
                 property_name, 
                 f"Information related to the {property_name} property"
             )
-            
             # Format the user prompt
             user_prompt = HTML_EXTRACTION_USER_PROMPT_TEMPLATE.format(
                 property=property_name,
                 property_description=property_description,
                 product_html=product_html
             )
-            
             # Call OpenAI to extract relevant HTML
-            response = self.openai_client.complete(
+            response = await self.openai_client.complete(
                 system_prompt=HTML_EXTRACTION_SYSTEM_PROMPT,
                 user_prompt=user_prompt,
                 model="gpt-4o-mini",
                 temperature=0,
                 max_tokens=2000  # Increased for HTML content
             )
-            
             # Clean and return the response
             if response and not response.startswith("{'error':"):
                 return response.strip()
             else:
                 logger.warning(f"OpenAI returned error for property {property_name}: {response}")
                 return ""
-                
         except Exception as e:
             logger.error(f"Error extracting HTML for property {property_name}: {str(e)}")
             return ""
