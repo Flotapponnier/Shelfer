@@ -93,7 +93,12 @@ class ProductImageExtractor:
                                 const parts = ss.split(',');
                                 let bestUrl = null, bestW = 0;
                                 parts.forEach(p => {
-                                    const [url, wDesc] = p.trim().split(' ');
+                                    const trimmed = p.trim();
+                                    const lastSpaceIndex = trimmed.lastIndexOf(' ');
+                                    if (lastSpaceIndex === -1) return; // No width descriptor
+                                    
+                                    const url = trimmed.substring(0, lastSpaceIndex);
+                                    const wDesc = trimmed.substring(lastSpaceIndex + 1);
                                     const w = parseInt((wDesc||'').replace('w',''), 10);
                                     if (!isNaN(w) && w > bestW) { bestW = w; bestUrl = url; }
                                 });

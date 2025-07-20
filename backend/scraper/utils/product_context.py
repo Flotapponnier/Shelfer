@@ -75,7 +75,9 @@ async def scrapeProductContext(
                 "You are an expert product summarizer. "
                 "Given the text of a product page, extract the main product details "
                 "(name, price, description, features, variants, availability) and return "
-                "a JSON object: { name, price, description, features[], variants[], availability }."
+                "a JSON object: { name, price, description, features[], variants[], availability }. "
+                "If the page does not contain specific product information (like site maps, category pages, "
+                "or general content), respond with exactly: 'FALLBACK_TO_HTML_EXTRACTION'"
             )
             
             relevant_summary = await asyncio.to_thread(
@@ -99,7 +101,8 @@ async def scrapeProductContext(
                     "please provide.*valid product",
                     "error",
                     "cannot.*extract",
-                    "unable to.*extract"
+                    "unable to.*extract",
+                    "fallback_to_html_extraction"  # Our specific keyword
                 ]
                 
                 response_lower = relevant_summary.lower()
@@ -138,7 +141,8 @@ async def scrapeProductContext(
                             "please provide.*valid product",
                             "error",
                             "cannot.*extract",
-                            "unable to.*extract"
+                            "unable to.*extract",
+                            "fallback_to_html_extraction"  # Our specific keyword
                         ]
                         
                         response_lower = relevant_summary.lower()
