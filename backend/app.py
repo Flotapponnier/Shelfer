@@ -199,4 +199,4 @@ async def cors_handler(request, call_next):
         return response
     
     response = await call_next(request)
-    return response 
+    return response

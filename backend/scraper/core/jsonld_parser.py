@@ -61,18 +61,18 @@ def _extract_all_schemas(obj: Dict[str, Any]) -> List[Dict[str, Any]]:
     Recursively extracts all schema objects from a JSON-LD object.
     
     This function traverses the entire object structure and extracts any object
-    that has an @type field, which indicates it's a schema.org object.
+    that has an @type or type field, which indicates it's a schema.org object.
     
     Args:
         obj: The JSON-LD object to search for schema objects
         
     Returns:
-        List of all schema objects found (including the input object if it has @type)
+        List of all schema objects found (including the input object if it has @type or type)
     """
     schemas = []
     
-    # If this object has @type, it's a schema object
-    if isinstance(obj, dict) and '@type' in obj:
+    # If this object has @type or type, it's a schema object
+    if isinstance(obj, dict) and ('@type' in obj or 'type' in obj):
         schemas.append(obj)
     
     # Recursively search all values in the object
@@ -101,18 +101,20 @@ def _is_product_schema(obj: Dict[str, Any]) -> bool:
     if not isinstance(obj, dict):
         return False
     
-    # Check for @type field - this is the primary indicator
-    schema_type = obj.get('@type', '')
+    # Check for @type or type field - both are used in JSON-LD
+    schema_type = obj.get('@type', '') or obj.get('type', '')
     if isinstance(schema_type, str):
         # Direct product type
         if schema_type.lower() in ['product', 'http://schema.org/product', 'https://schema.org/product']:
-            logger.debug(f"Found product schema by @type: {schema_type}")
+            type_field = '@type' if '@type' in obj else 'type'
+            logger.debug(f"Found product schema by {type_field}: {schema_type}")
             return True
     elif isinstance(schema_type, list):
         # Multiple types - check if any are product
         for type_item in schema_type:
             if isinstance(type_item, str) and type_item.lower() in ['product', 'http://schema.org/product', 'https://schema.org/product']:
-                logger.debug(f"Found product schema by @type in list: {type_item}")
+                type_field = '@type' if '@type' in obj else 'type'
+                logger.debug(f"Found product schema by {type_field} in list: {type_item}")
                 return True
     
     # Fallback: Check for product-specific fields that strongly indicate this is a product
